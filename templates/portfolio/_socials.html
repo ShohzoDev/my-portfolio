@@ -1,0 +1,7 @@
+{% load portfolio_extras %}{% for social in social_links %}
+  {% if social.has_link %}
+    <a href="{{ social.url }}" class="social-icon linked" title="{{ social.display_name }}" aria-label="{{ social.display_name }}" target="_blank" rel="noopener me">{% social_icon social.platform %}</a>
+  {% else %}
+    <span class="social-icon unlinked" role="img" title="{{ social.display_name }}" aria-label="{{ social.display_name }}">{% social_icon social.platform %}</span>
+  {% endif %}
+{% endfor %}

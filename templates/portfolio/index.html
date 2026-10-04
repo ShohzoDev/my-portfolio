@@ -1,0 +1,328 @@
+{% load static %}<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="color-scheme" content="dark">
+<script>document.documentElement.classList.add("js")</script>
+<title>{{ strings.hero_name }} — {{ strings.hero_role }}</title>
+<meta name="description" content="{{ strings.hero_tagline }}">
+<link rel="canonical" href="{{ canonical_url }}">
+{% for alt in alternates %}<link rel="alternate" hreflang="{{ alt.code }}" href="{{ alt.url }}">
+{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ x_default_url }}">
+
+<link rel="icon" type="image/svg+xml" href="{% static 'portfolio/img/favicon.svg' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'portfolio/img/favicon-32.png' %}">
+<link rel="apple-touch-icon" href="{% static 'portfolio/img/apple-touch-icon.png' %}">
+
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Shohzod">
+<meta property="og:title" content="{{ strings.hero_name }} — {{ strings.hero_role }}">
+<meta property="og:description" content="{{ strings.hero_tagline }}">
+<meta property="og:url" content="{{ canonical_url }}">
+<meta property="og:image" content="{{ og_image_url }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ strings.hero_name }} — {{ strings.hero_role }}">
+<meta property="og:locale" content="{{ og_locale }}">
+{% for loc in og_locale_alternates %}<meta property="og:locale:alternate" content="{{ loc }}">
+{% endfor %}<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ strings.hero_name }} — {{ strings.hero_role }}">
+<meta name="twitter:description" content="{{ strings.hero_tagline }}">
+<meta name="twitter:image" content="{{ og_image_url }}">
+
+{% if lang == "ru" %}<link rel="preload" href="{% static 'portfolio/fonts/inter-cyrillic-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+{% else %}<link rel="preload" href="{% static 'portfolio/fonts/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{% static 'portfolio/fonts/space-grotesk-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+{% endif %}<link rel="stylesheet" href="{% static 'portfolio/css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
+<script type="application/ld+json">{{ person_jsonld }}</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">{{ strings.skip_link }}</a>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<header class="site-header" id="site-header">
+  <div class="container">
+    <a href="#top" class="logo">Shohzod<span class="dot">.</span></a>
+
+    <div class="nav-desktop">
+      <nav aria-label="{{ strings.menu_label }}">
+        <ul class="nav-links">
+          <li><a href="#about">{{ strings.nav_about }}</a></li>
+          <li><a href="#skills">{{ strings.nav_skills }}</a></li>
+          <li><a href="#projects">{{ strings.nav_projects }}</a></li>
+          <li><a href="#contact">{{ strings.nav_contact }}</a></li>
+        </ul>
+      </nav>
+      <button type="button" class="cmdk-trigger" data-cmdk-open aria-haspopup="dialog" aria-controls="cmdk" hidden>
+        <span class="cmdk-trigger-label">{{ strings.cmdk_open }}</span>
+        <kbd data-mod-key>Ctrl</kbd><kbd>K</kbd>
+      </button>
+      <nav class="lang-switch" aria-label="{{ strings.lang_group_label }}">
+        {% for alt in alternates %}<a href="/{{ alt.code }}/" hreflang="{{ alt.code }}" lang="{{ alt.code }}" title="{{ alt.name }}"{% if alt.code == lang %} class="active" aria-current="true"{% endif %}>{{ alt.code|upper }}</a>{% endfor %}
+      </nav>
+    </div>
+
+    <button class="nav-toggle" id="nav-toggle" aria-label="{{ strings.menu_label }}" aria-expanded="false" aria-controls="nav-mobile">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<nav class="nav-mobile" id="nav-mobile" aria-label="{{ strings.menu_label }}" aria-hidden="true">
+  <a href="#about">{{ strings.nav_about }}</a>
+  <a href="#skills">{{ strings.nav_skills }}</a>
+  <a href="#projects">{{ strings.nav_projects }}</a>
+  <a href="#contact">{{ strings.nav_contact }}</a>
+  <div class="lang-switch" role="group" aria-label="{{ strings.lang_group_label }}">
+    {% for alt in alternates %}<a href="/{{ alt.code }}/" hreflang="{{ alt.code }}" lang="{{ alt.code }}" title="{{ alt.name }}"{% if alt.code == lang %} class="active" aria-current="true"{% endif %}>{{ alt.code|upper }}</a>{% endfor %}
+  </div>
+</nav>
+
+<main id="main">
+
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="hero-copy">
+        <p class="hero-greeting">{{ strings.hero_greeting }}</p>
+        <h1 class="hero-name">{{ strings.hero_name }}</h1>
+        <p class="hero-role">{{ strings.hero_role }}</p>
+        <p class="hero-tagline">{{ strings.hero_tagline }}</p>
+        <div class="hero-actions">
+          <a href="#projects" class="btn btn-primary">{{ strings.hero_cta_projects }}</a>
+          <a href="#contact" class="btn btn-ghost">{{ strings.hero_cta_contact }}</a>
+        </div>
+        <div class="hero-socials">{% include "portfolio/_socials.html" %}</div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-photo-wrap">
+          <span class="hero-corner tl" aria-hidden="true"></span>
+          <span class="hero-corner br" aria-hidden="true"></span>
+          <picture>
+            <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 480px) 78vw, 340px">
+            <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 480px) 78vw, 340px">
+            <img src="{% static 'portfolio/img/profile-800.jpg' %}" srcset="{% static 'portfolio/img/profile-400.jpg' %} 400w, {% static 'portfolio/img/profile-800.jpg' %} 800w" sizes="(max-width: 480px) 78vw, 340px" alt="{{ strings.hero_name }}" width="800" height="864" fetchpriority="high" decoding="async">
+          </picture>
+        </div>
+        {% if live_count %}
+        <div class="hero-badge">
+          <strong>{{ live_count }}</strong>
+          <span>{{ badge_label }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="container">
+      <p class="section-tag" aria-hidden="true">01</p>
+      <h2 class="section-title reveal">{{ strings.about_title }}</h2>
+      <div class="about-grid">
+        <div class="about-text reveal">
+          <p>{{ strings.about_p1 }}</p>
+          <p>{{ strings.about_p2 }}</p>
+        </div>
+        <dl class="about-facts reveal">
+          <div class="fact-row"><dt class="fact-label">{{ strings.fact_location_label }}</dt><dd class="fact-value">{{ strings.fact_location_value }}</dd></div>
+          <div class="fact-row"><dt class="fact-label">{{ strings.fact_focus_label }}</dt><dd class="fact-value">{{ strings.fact_focus_value }}</dd></div>
+          <div class="fact-row"><dt class="fact-label">{{ strings.fact_status_label }}</dt><dd class="fact-value"><span class="pulse-dot" aria-hidden="true"></span>{{ strings.fact_status_value }}</dd></div>
+          <div class="fact-row"><dt class="fact-label">{{ strings.fact_deploy_label }}</dt><dd class="fact-value">{{ strings.fact_deploy_value }}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="container">
+      <p class="section-tag" aria-hidden="true">02</p>
+      <h2 class="section-title reveal">{{ strings.skills_title }}</h2>
+      <div class="skills-grid">
+        {% for group in skills %}
+          <div class="skill-card reveal">
+            <h3>{{ group.title }}</h3>
+            <ul class="tag-row">{% for tag in group.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="container">
+      <p class="section-tag" aria-hidden="true">03</p>
+      <h2 class="section-title reveal">{{ strings.projects_title }}</h2>
+
+      {% for p in featured_projects %}
+        <article class="project-card featured reveal{% if not p.cover and not p.highlights %} no-aside{% endif %}" id="p-{{ p.slug }}">
+          <div class="featured-body">
+            <div class="project-top">
+              <span class="featured-label">{{ strings.featured_label }}</span>
+              <span class="status-pill status-{{ p.status }}">{{ p.status_label }}</span>
+            </div>
+            <h3 class="project-title">{{ p.title }}</h3>
+            <p class="project-desc">{{ p.desc }}</p>
+            {% if p.cover and p.highlights %}
+              <ul class="highlights">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
+            {% endif %}
+            <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+            {% include "portfolio/_project_links.html" %}
+          </div>
+          {% if p.cover %}
+            <div class="featured-aside featured-cover">
+              <img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">
+            </div>
+          {% elif p.highlights %}
+            <div class="featured-aside">
+              <p class="aside-label">{{ strings.project_highlights }}</p>
+              <ul class="highlights">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+
+      {% if main_projects %}
+      <div class="projects-grid">
+        {% for p in main_projects %}
+          <article class="project-card reveal" id="p-{{ p.slug }}">
+            {% if p.cover %}<img class="project-cover" src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">{% endif %}
+            <div class="project-top">
+              <h3 class="project-title">{{ p.title }}</h3>
+              <span class="status-pill status-{{ p.status }}">{{ p.status_label }}</span>
+            </div>
+            <p class="project-desc">{{ p.desc }}</p>
+            <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+            {% include "portfolio/_project_links.html" %}
+          </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if other_projects %}
+      <div class="other-work reveal">
+        <h3 class="other-title">{{ strings.projects_other_title }}</h3>
+        <ul class="other-list">
+          {% for p in other_projects %}
+            <li class="other-item" id="p-{{ p.slug }}">
+              <div class="other-main">
+                <h4>{{ p.title }}</h4>
+                <p>{{ p.desc }}</p>
+              </div>
+              <div class="other-meta">
+                <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+                {% include "portfolio/_project_links.html" %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <div class="beyond reveal">
+        <div class="beyond-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M3 15.5 8 4l4 8 2-4 3 7.5"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="beyond-title">{{ strings.beyond_title }}</h3>
+          <p>{{ strings.beyond_text }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <div class="contact-box reveal">
+        <span class="hero-corner tl" aria-hidden="true"></span>
+        <span class="hero-corner br" aria-hidden="true"></span>
+
+        <div class="contact-intro">
+          <p class="section-tag" aria-hidden="true">04</p>
+          <h2 class="section-title">{{ strings.contact_title }}</h2>
+          <p class="contact-desc">{{ strings.contact_desc }}</p>
+          <p class="contact-or">{{ strings.contact_or }}</p>
+          <div class="contact-actions">
+            <a href="mailto:{{ contact_email }}" class="btn btn-primary">{{ strings.contact_email_btn }}</a>
+            <button type="button" class="btn btn-ghost btn-sm copy-email-btn" id="copy-email-btn" data-email="{{ contact_email }}" data-label="{{ strings.contact_email_copy }}" data-copied-label="{{ strings.contact_email_copied }}" hidden>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+                <path d="M4.5 13.5h-1a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/>
+              </svg>
+              <span class="copy-label">{{ strings.contact_email_copy }}</span>
+            </button>
+          </div>
+          <div class="contact-socials">{% include "portfolio/_socials.html" %}</div>
+        </div>
+
+        <form class="contact-form" id="contact-form" method="post" action="{% url 'portfolio:contact' lang %}#contact" data-sending-label="{{ strings.form_sending }}" data-error-label="{{ strings.form_error }}">
+          {% csrf_token %}
+          <h3 class="form-title">{{ strings.form_title }}</h3>
+
+          <div class="field{% if form.name.errors %} has-error{% endif %}">
+            <label for="cf-name">{{ strings.form_name }}</label>
+            <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="120" required value="{{ form.name.value|default_if_none:'' }}"{% if form.name.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-name-err">
+            <p class="field-error" id="cf-name-err">{{ form.name.errors.0|default:'' }}</p>
+          </div>
+
+          <div class="field{% if form.contact.errors %} has-error{% endif %}">
+            <label for="cf-contact">{{ strings.form_contact }}</label>
+            <input id="cf-contact" name="contact" type="text" autocomplete="email" maxlength="200" required value="{{ form.contact.value|default_if_none:'' }}"{% if form.contact.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-contact-err">
+            <p class="field-error" id="cf-contact-err">{{ form.contact.errors.0|default:'' }}</p>
+          </div>
+
+          <div class="field{% if form.message.errors %} has-error{% endif %}">
+            <label for="cf-message">{{ strings.form_message }}</label>
+            <textarea id="cf-message" name="message" rows="5" maxlength="4000" required placeholder="{{ strings.form_message_ph }}"{% if form.message.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-message-err">{{ form.message.value|default_if_none:'' }}</textarea>
+            <p class="field-error" id="cf-message-err">{{ form.message.errors.0|default:'' }}</p>
+          </div>
+
+          <div class="hp-field" aria-hidden="true">
+            <label for="cf-website">Website</label>
+            <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <button type="submit" class="btn btn-primary form-submit">{{ strings.form_submit }}</button>
+          <p class="form-status{% if sent %} is-success{% elif form.errors %} is-error{% endif %}" id="form-status" role="status" aria-live="polite">{% if sent %}{{ strings.form_success }}{% elif form.non_field_errors %}{{ form.non_field_errors.0 }}{% elif form.errors %}{{ strings.form_error }}{% endif %}</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <a href="#top" class="logo">Shohzod<span class="dot">.</span></a>
+    <span>&copy; {% now "Y" %} Shohzod — {{ strings.footer_rights }}</span>
+    <span>{{ strings.footer_built }}</span>
+  </div>
+</footer>
+
+<dialog class="cmdk" id="cmdk" aria-label="{{ strings.cmdk_open }}">
+  <div class="cmdk-panel">
+    <div class="cmdk-search">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="9" cy="9" r="5.5"/><path d="m13.2 13.2 3.8 3.8"/></svg>
+      <input id="cmdk-input" type="text" role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="{{ strings.cmdk_placeholder }}">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="cmdk-list" id="cmdk-list" role="listbox" aria-label="{{ strings.cmdk_open }}"></ul>
+    <p class="cmdk-empty" id="cmdk-empty" hidden>{{ strings.cmdk_empty }}</p>
+    <div class="cmdk-foot" aria-hidden="true">
+      <span><kbd>↑</kbd><kbd>↓</kbd> {{ strings.cmdk_hint_nav }}</span>
+      <span><kbd>↵</kbd> {{ strings.cmdk_hint_enter }}</span>
+      <span><kbd>Esc</kbd> {{ strings.cmdk_hint_esc }}</span>
+    </div>
+  </div>
+</dialog>
+
+{{ commands|json_script:"cmdk-commands" }}
+<script src="{% static 'portfolio/js/script.js' %}" defer></script>
+</body>
+</html>
