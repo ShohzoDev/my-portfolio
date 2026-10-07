@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .content import STRINGS, SUPPORTED_LANGUAGES, localized_skills, plural_key
-from .models import ContactMessage, Project, SocialLink
+from .models import ContactMessage, LoginFailure, Project, SiteProfile, SocialLink
 
 # The index template uses {% static %}, and production uses WhiteNoise's
 # manifest storage (hashed filenames, requires `collectstatic`). Django's test
@@ -14,6 +14,7 @@ from .models import ContactMessage, Project, SocialLink
 # manifest entries — so tests that render the real template use the plain
 # storage instead. Unrelated to what these tests verify.
 _TEST_STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
@@ -38,13 +39,17 @@ class SocialLinkModelTests(TestCase):
 
 
 class ProjectModelTests(TestCase):
-    def test_seed_migration_created_all_projects_with_tiers(self):
-        self.assertEqual(Project.objects.count(), 8)
-        self.assertEqual(Project.objects.get(slug="buildops").tier, Project.Tier.FEATURED)
-        self.assertEqual(
-            set(Project.objects.filter(tier=Project.Tier.OTHER).values_list("slug", flat=True)),
-            {"english-bot", "n8n-workflows"},
+    def test_content_migration_sets_up_compact_lineup(self):
+        featured = list(
+            Project.objects.filter(is_active=True, tier=Project.Tier.FEATURED).values_list("slug", flat=True)
         )
+        self.assertEqual(featured, ["buildops", "oqqushlar", "zebest"])
+        for slug in featured:
+            self.assertTrue(Project.objects.get(slug=slug).has_case, slug)
+        self.assertFalse(Project.objects.filter(slug="eltaom").exists())  # renamed to Zebest
+        self.assertFalse(Project.objects.get(slug="geo-portfolio").is_active)
+        self.assertEqual(Project.objects.get(slug="buildops").link, "")  # client site not published
+        self.assertEqual(SiteProfile.objects.count(), 1)
 
     def test_every_project_is_translated(self):
         for p in Project.objects.all():
@@ -58,8 +63,19 @@ class ProjectModelTests(TestCase):
         data = p.localized("en")
         self.assertEqual(data["title"], p.title_en)
         self.assertIn("Django", data["tags"])
-        self.assertEqual(len(data["highlights"]), 5)
+        self.assertEqual(len(data["highlights"]), 6)
+        self.assertEqual(len(data["facts"]), 3)
+        self.assertEqual(len(data["solution"]), 3)  # blank-line separated paragraphs
         self.assertEqual(data["cover"], "")
+
+    def test_every_case_is_fully_translated(self):
+        for p in Project.objects.filter(is_active=True):
+            if not p.has_case:
+                continue
+            for lang in SUPPORTED_LANGUAGES:
+                for field in ("facts", "problem", "solution", "result", "highlights"):
+                    with self.subTest(project=p.slug, lang=lang, field=field):
+                        self.assertTrue(getattr(p, f"{field}_{lang}").strip())
 
 
 class ContentTests(TestCase):
@@ -145,30 +161,64 @@ class IndexPageTests(TestCase):
     def test_content_is_server_rendered(self):
         html = self.get()
         self.assertIn("BuildOps", html)
-        self.assertIn("full-stack dasturchiman", html)  # about text (no apostrophe — autoescape)
+        self.assertIn("Django backend muhandisiman", html)  # About text from SiteProfile
 
     def test_project_tiers_render_in_their_sections(self):
         html = self.get("en")
-        self.assertIn('class="case reveal', html)
-        self.assertIn('id="p-buildops"', html)
+        work = html[html.index('class="work-grid"'):html.index('class="other-list"')]
+        for slug in ("buildops", "oqqushlar", "zebest"):
+            self.assertIn(f'id="p-{slug}"', work)
+            self.assertIn(f'href="/en/work/{slug}/"', work)
         other = html[html.index('class="other-list"'):]
-        self.assertIn('id="p-english-bot"', other)
-        self.assertIn('id="p-n8n-workflows"', other)
+        for slug in ("roma-food", "geodezistman", "lingvoapp", "english-bot", "n8n-workflows"):
+            self.assertIn(f'id="p-{slug}"', other)
+        self.assertNotIn("p-geo-portfolio", html)
+        self.assertNotIn("Eltaom", html)
 
     def test_badge_counts_only_live_projects(self):
         live = Project.objects.filter(is_active=True, status=Project.Status.LIVE).count()
         html = self.get("ru")
         self.assertIn(f"{live} — {STRINGS['ru'][plural_key('ru', live)]}", html)
+        self.assertEqual(live, 4)
         self.assertIn(STRINGS["ru"][plural_key("ru", live)], html)
 
     def test_inactive_project_is_hidden(self):
         Project.objects.filter(slug="lingvoapp").update(is_active=False)
         self.assertNotIn('id="p-lingvoapp"', self.get())
 
-    def test_unlinked_social_icon_has_role_img(self):
+    def test_only_linked_social_icons_are_shown(self):
         html = self.get()
-        self.assertIn('class="social-icon unlinked" role="img"', html)
+        self.assertIn('href="https://github.com/ShohzoDev0108"', html)
+        self.assertNotIn('title="Instagram"', html)  # seeded without a URL
+        SocialLink.objects.filter(platform="instagram").update(url="https://instagram.com/someone")
+        self.assertIn('title="Instagram"', self.get())
 
+    def test_telegram_link_becomes_the_main_contact_button(self):
+        self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
+        SocialLink.objects.filter(platform="telegram").update(url="https://t.me/someone")
+        html = self.get("en")
+        self.assertEqual(html.count('href="https://t.me/someone" class="btn'), 1)  # hero
+        self.assertIn('class="btn btn-primary" href="https://t.me/someone"', html)  # contact
+
+    @override_settings(SITE_CONTACT_EMAIL="contact@example.com")
+    def test_placeholder_email_is_never_shown(self):
+        html = self.get("en")
+        self.assertNotIn("example.com", html)
+        self.assertNotIn("mailto:", html)
+
+    @override_settings(SITE_CONTACT_EMAIL="hello@real.uz")
+    def test_real_email_is_shown(self):
+        self.assertIn('href="mailto:hello@real.uz"', self.get("en"))
+
+    def test_profile_name_and_about_come_from_admin(self):
+        SiteProfile.objects.update(full_name="Shohzod Testov", about_en="First para.\n\nSecond para.")
+        html = self.get("en")
+        self.assertIn("<title>Shohzod Testov — Django Backend Engineer</title>", html)
+        self.assertIn('<p class="lead">First para.</p><p>Second para.</p>', html)
+        data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+        self.assertEqual(data["name"], "Shohzod Testov")
+
+    @override_settings(SITE_CONTACT_EMAIL="hello@real.uz")
     def test_command_palette_data(self):
         html = self.get("en")
         match = re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S)
@@ -205,12 +255,15 @@ class IndexPageTests(TestCase):
 
     def test_robots_and_sitemap(self):
         robots = self.client.get(reverse("portfolio:robots_txt")).content.decode()
-        self.assertIn("Disallow: /admin/", robots)
+        self.assertNotIn("admin", robots)  # don't advertise the admin path
         self.assertIn("Sitemap: http://testserver/sitemap.xml", robots)
         sitemap = self.client.get(reverse("portfolio:sitemap_xml")).content.decode()
         for lang in SUPPORTED_LANGUAGES:
             self.assertIn(f"<loc>http://testserver/{lang}/</loc>", sitemap)
         self.assertIn('hreflang="x-default"', sitemap)
+        for lang in SUPPORTED_LANGUAGES:
+            self.assertIn(f"<loc>http://testserver/{lang}/work/buildops/</loc>", sitemap)
+        self.assertNotIn("/work/roma-food/", sitemap)
 
 
 @override_settings(STORAGES=_TEST_STORAGES, CONTACT_RATE_LIMIT_PER_HOUR=3)
@@ -300,7 +353,7 @@ class ContactFormTests(TestCase):
     def test_old_messages_do_not_count(self):
         from datetime import timedelta
         from django.utils import timezone
-        from .views import _ip_hash
+        from .security import ip_hash as _ip_hash
         for _ in range(3):
             ContactMessage.objects.create(name="x", contact="x", message="x", ip_hash=_ip_hash("127.0.0.1"))
         ContactMessage.objects.update(created_at=timezone.now() - timedelta(hours=2))
@@ -335,7 +388,7 @@ class ContactFormTests(TestCase):
         with mock.patch(
             "portfolio.notifications.urllib.request.urlopen",
             side_effect=urllib.error.URLError("down"),
-        ):
+        ), self.assertLogs("portfolio.notifications", level="ERROR"):
             response = self.post(self.valid, ajax=True)
         self.assertTrue(response.json()["ok"])
         self.assertFalse(ContactMessage.objects.get().telegram_sent)
@@ -350,6 +403,200 @@ class ContactFormTests(TestCase):
             response = self.post(self.valid, ajax=True)
         self.assertTrue(response.json()["ok"])
         self.assertEqual(ContactMessage.objects.count(), 1)
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class CaseStudyPageTests(TestCase):
+    def test_case_pages_render_in_every_language(self):
+        for slug in ("buildops", "oqqushlar", "zebest"):
+            p = Project.objects.get(slug=slug)
+            for lang in SUPPORTED_LANGUAGES:
+                with self.subTest(slug=slug, lang=lang):
+                    response = self.client.get(f"/{lang}/work/{slug}/")
+                    self.assertEqual(response.status_code, 200)
+                    html = response.content.decode()
+                    self.assertIn(f'<html lang="{lang}">', html)
+                    self.assertIn(f'<link rel="canonical" href="http://testserver/{lang}/work/{slug}/">', html)
+                    for code in SUPPORTED_LANGUAGES:
+                        self.assertIn(f'hreflang="{code}" href="http://testserver/{code}/work/{slug}/"', html)
+                    self.assertIn(STRINGS[lang]["case_solution"], html)
+                    first_para = getattr(p, f"problem_{lang}").split("\n\n")[0][:40]
+                    self.assertIn(first_para.replace("'", "&#x27;"), html)
+                    self.assertIn('property="og:type" content="article"', html)
+
+    def test_next_project_cycles(self):
+        html = self.client.get("/en/work/zebest/").content.decode()
+        self.assertIn('class="case-next" href="/en/work/buildops/"', html)
+
+    def test_project_without_case_is_404(self):
+        self.assertEqual(self.client.get("/uz/work/roma-food/").status_code, 404)
+        self.assertEqual(self.client.get("/uz/work/does-not-exist/").status_code, 404)
+
+    def test_case_needs_all_three_languages(self):
+        Project.objects.filter(slug="zebest").update(problem_en="", solution_en="")
+        self.assertFalse(Project.objects.get(slug="zebest").has_case)
+        self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)
+        self.assertNotIn("/work/zebest/", self.client.get("/sitemap.xml").content.decode())
+
+    @override_settings(DEBUG=False)
+    def test_error_pages_have_no_inline_styles(self):
+        response = self.client.get("/uz/work/does-not-exist/")
+        self.assertEqual(response.status_code, 404)
+        html = response.content.decode()
+        self.assertNotIn("<style", html)
+        self.assertIn('href="/static/portfolio/css/error.css"', html)
+        self.assertIn("Content-Security-Policy", response)
+
+    def test_inactive_case_is_404(self):
+        Project.objects.filter(slug="zebest").update(is_active=False)
+        self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)
+
+    def test_case_page_nav_points_back_home(self):
+        html = self.client.get("/ru/work/buildops/").content.decode()
+        self.assertIn('href="/ru/#about"', html)
+        self.assertIn('href="/en/work/buildops/" hreflang="en"', html)  # language switch keeps the page
+        commands = json.loads(
+            re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S).group(1)
+        )
+        self.assertNotIn("scroll", {c["kind"] for c in commands})
+
+
+@override_settings(STORAGES=_TEST_STORAGES)
+class SecurityTests(TestCase):
+    def test_csp_header_and_inline_script_hash_match(self):
+        from .security import CONTENT_SECURITY_POLICY, JS_FLAG_HASH, JS_FLAG_SCRIPT
+
+        response = self.client.get("/en/")
+        self.assertEqual(response["Content-Security-Policy"], CONTENT_SECURITY_POLICY)
+        self.assertIn(JS_FLAG_HASH, response["Content-Security-Policy"])
+        self.assertIn("frame-ancestors 'none'", response["Content-Security-Policy"])
+        self.assertIn("camera=()", response["Permissions-Policy"])
+        # The only inline <script> must be byte-identical to the hashed one.
+        html = response.content.decode()
+        inline = re.findall(r"<script>(.*?)</script>", html, re.S)
+        self.assertEqual(inline, [JS_FLAG_SCRIPT])
+        self.assertNotIn(" style=", html)  # style-src 'self' forbids inline styles
+
+    def test_admin_is_left_without_csp(self):
+        response = self.client.get("/admin/login/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Content-Security-Policy", response)
+
+    def test_admin_login_is_throttled_after_repeated_failures(self):
+        from django.contrib.auth import get_user_model
+
+        get_user_model().objects.create_superuser("boss", "boss@x.uz", "correct-horse-battery")
+        url = "/admin/login/?next=/admin/"
+        with self.assertLogs("portfolio.security", level="WARNING"):
+            for _ in range(5):
+                response = self.client.post(url, {"username": "boss", "password": "wrong"})
+                self.assertEqual(response.status_code, 200)  # normal "wrong password" page
+            self.assertEqual(LoginFailure.objects.count(), 5)
+            blocked = self.client.post(url, {"username": "boss", "password": "correct-horse-battery"})
+        self.assertEqual(blocked.status_code, 429)
+
+    def test_successful_login_works_below_the_limit(self):
+        from django.contrib.auth import get_user_model
+
+        get_user_model().objects.create_superuser("boss", "boss@x.uz", "correct-horse-battery")
+        with self.assertLogs("portfolio.security", level="WARNING"):
+            self.client.post("/admin/login/", {"username": "boss", "password": "wrong"})
+        ok = self.client.post("/admin/login/?next=/admin/", {"username": "boss", "password": "correct-horse-battery"})
+        self.assertRedirects(ok, "/admin/", fetch_redirect_response=False)
+
+    @override_settings(ADMIN_LOGIN_GLOBAL_MAX_FAILURES=3)
+    def test_admin_login_global_cap(self):
+        for i in range(3):
+            LoginFailure.objects.create(ip_hash=f"other-{i}")
+        response = self.client.post("/admin/login/", {"username": "x", "password": "y"})
+        self.assertEqual(response.status_code, 429)
+
+    @override_settings(DEBUG=False, SITE_CONTACT_EMAIL="contact@example.com")
+    def test_system_check_warns_about_placeholder_email(self):
+        from .apps import contact_email_configured
+
+        self.assertEqual([w.id for w in contact_email_configured(None)], ["portfolio.W001"])
+
+
+class CoverCompressionTests(TestCase):
+    def setUp(self):
+        import tempfile
+
+        self.media = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media)
+        self.override.enable()
+
+    def tearDown(self):
+        import shutil
+
+        self.override.disable()
+        shutil.rmtree(self.media, ignore_errors=True)
+
+    def test_large_upload_becomes_small_webp(self):
+        import io
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        buffer = io.BytesIO()
+        Image.new("RGB", (3200, 2000), (40, 90, 160)).save(buffer, "PNG")
+        p = Project.objects.get(slug="buildops")
+        p.cover = SimpleUploadedFile("shot.png", buffer.getvalue(), content_type="image/png")
+        p.save()
+        p.refresh_from_db()
+        self.assertTrue(p.cover.name.endswith(".webp"), p.cover.name)
+        with Image.open(p.cover.path) as img:
+            self.assertEqual(img.format, "WEBP")
+            self.assertEqual(img.size, (1600, 1000))
+
+        # Saving again without a new upload must not re-encode.
+        self._assert_second_save_keeps(p)
+
+    def _upload(self, img, fmt="PNG", name="shot.png"):
+        import io
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        buffer = io.BytesIO()
+        img.save(buffer, fmt)
+        p = Project.objects.get(slug="oqqushlar")
+        p.cover = SimpleUploadedFile(name, buffer.getvalue())
+        p.save()
+        p.refresh_from_db()
+        return p
+
+    def test_very_tall_screenshot_is_scaled_not_crashing(self):
+        from PIL import Image
+
+        p = self._upload(Image.new("RGB", (1440, 18000), "white"))
+        with Image.open(p.cover.path) as img:
+            self.assertEqual(img.format, "WEBP")
+            self.assertLessEqual(img.height, 16383)
+
+    def test_palette_png_keeps_transparency(self):
+        from PIL import Image
+
+        img = Image.new("P", (200, 100), 0)
+        img.putpalette([0, 0, 0, 255, 0, 0] + [0] * 762)
+        img.info["transparency"] = 0
+        p = self._upload(img)
+        with Image.open(p.cover.path) as out:
+            self.assertEqual(out.mode, "RGBA")
+
+    def test_non_image_is_left_alone(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        p = Project.objects.get(slug="oqqushlar")
+        p.cover = SimpleUploadedFile("notes.png", b"not an image")
+        p.save()  # must not raise
+        self.assertTrue(p.cover.name.endswith(".png"))
+
+    def _assert_second_save_keeps(self, p):
+        name = p.cover.name
+        p.title_en = "BuildOps"
+        p.save()
+        p.refresh_from_db()
+        self.assertEqual(p.cover.name, name)
 
 
 class BlankEnvSettingsTests(TestCase):

@@ -81,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "portfolio.security.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -164,6 +165,9 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
+    # Must be listed explicitly: defining STORAGES replaces Django's default
+    # dict, and without "default" every media upload (project covers) fails.
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
@@ -201,6 +205,44 @@ CONTACT_GLOBAL_LIMIT_PER_HOUR = int(env("CONTACT_GLOBAL_LIMIT_PER_HOUR", "30"))
 # PythonAnywhere) sets them. Without a proxy, anyone can forge these headers
 # to dodge the per-sender limit — so the default is to use REMOTE_ADDR.
 CONTACT_TRUST_PROXY_HEADERS = env("CONTACT_TRUST_PROXY_HEADERS", "False") == "True"
+
+# ---------------------------------------------------------------------------
+# Admin panel
+# ---------------------------------------------------------------------------
+
+# A non-default admin path (set DJANGO_ADMIN_URL in .env, e.g. "boshqaruv-7f3k/")
+# keeps bots that hammer /admin/ away from the login form. Not secret-grade —
+# the login throttle below is the real protection.
+ADMIN_URL = env("DJANGO_ADMIN_URL", "admin/").strip("/") + "/"
+ADMIN_LOGIN_MAX_FAILURES = int(env("ADMIN_LOGIN_MAX_FAILURES", "5"))
+ADMIN_LOGIN_WINDOW_MINUTES = int(env("ADMIN_LOGIN_WINDOW_MINUTES", "15"))
+# Failed logins from all clients together within the window before the login
+# form pauses for everyone (stops IP-rotating guessing).
+ADMIN_LOGIN_GLOBAL_MAX_FAILURES = int(env("ADMIN_LOGIN_GLOBAL_MAX_FAILURES", "30"))
+# Note: the client IP comes from portfolio.security.client_ip — behind nginx
+# set CONTACT_TRUST_PROXY_HEADERS=True, or every visitor looks like 127.0.0.1.
+
+# ---------------------------------------------------------------------------
+# Logging — errors go to stderr, which gunicorn/systemd (journalctl) and
+# PythonAnywhere's error log capture. Without this, a production 500 or a
+# failed Telegram notification would leave no trace at all.
+# ---------------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "plain": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "stderr": {"class": "logging.StreamHandler", "formatter": "plain"},
+    },
+    "root": {"handlers": ["stderr"], "level": "WARNING"},
+    "loggers": {
+        "django.request": {"handlers": ["stderr"], "level": "ERROR", "propagate": False},
+        "portfolio": {"handlers": ["stderr"], "level": "INFO", "propagate": False},
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Production hardening (only active when DEBUG=False)

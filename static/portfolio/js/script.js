@@ -193,6 +193,27 @@
       }
     }
 
+    // Each drawing is one Tab stop; arrow keys move between its nodes
+    // (otherwise a keyboard user would have to Tab through 9 nodes).
+    document.querySelectorAll(".diagram-svg").forEach((svg) => {
+      const items = Array.from(svg.querySelectorAll(".node[data-detail]"));
+      items.forEach((node, i) => {
+        node.setAttribute("tabindex", i === 0 ? "0" : "-1");
+        node.addEventListener("keydown", (e) => {
+          const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+          let target = null;
+          if (step) target = items[(i + step + items.length) % items.length];
+          else if (e.key === "Home") target = items[0];
+          else if (e.key === "End") target = items[items.length - 1];
+          if (!target) return;
+          e.preventDefault();
+          items.forEach((n) => n.setAttribute("tabindex", "-1"));
+          target.setAttribute("tabindex", "0");
+          target.focus();
+        });
+      });
+    });
+
     nodes.forEach((node) => {
       node.addEventListener("mouseenter", () => show(node));
       node.addEventListener("focus", () => show(node));
@@ -403,8 +424,7 @@
         if (c.external) window.open(c.href, "_blank", "noopener");
         else window.location.href = c.href;
       } else if (c.kind === "copy") {
-        const btn = document.getElementById("copy-email-btn");
-        if (await copyText(c.value)) toast(btn ? btn.dataset.copiedLabel : "✓");
+        if (await copyText(c.value)) toast(c.done || "✓");
       }
     }
 

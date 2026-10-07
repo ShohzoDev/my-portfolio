@@ -1,6 +1,0 @@
-{% if p.link or p.github %}
-<div class="project-links">
-  {% if p.link %}<a class="btn btn-ghost btn-sm" href="{{ p.link }}" target="_blank" rel="noopener">{{ strings.project_link }} <span aria-hidden="true">↗</span></a>{% endif %}
-  {% if p.github %}<a class="btn btn-ghost btn-sm" href="{{ p.github }}" target="_blank" rel="noopener">{{ strings.project_code }} <span aria-hidden="true">↗</span></a>{% endif %}
-</div>
-{% endif %}

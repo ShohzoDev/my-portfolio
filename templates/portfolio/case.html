@@ -1,0 +1,85 @@
+{% extends "portfolio/base.html" %}
+
+{% block og_type %}article{% endblock %}
+
+{% block content %}
+  <article class="case-page">
+    <div class="container">
+      <a class="case-back" href="/{{ lang }}/#projects"><span aria-hidden="true">←</span> {{ strings.case_back }}</a>
+
+      <header class="case-head">
+        <p class="status status-{{ project.status }}"><span class="dot" aria-hidden="true"></span>{{ project.status_label }}</p>
+        <h1 class="case-title">{{ project.title }}</h1>
+        <p class="case-lead">{{ project.desc }}</p>
+        {% if project.facts %}<ul class="work-facts case-facts">{% for f in project.facts %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+      </header>
+
+      {% if project.cover %}
+        <figure class="case-cover"><img src="{{ project.cover }}" alt="{{ project.title }}" decoding="async"></figure>
+      {% endif %}
+
+      <div class="case-layout">
+        <div class="case-body">
+          {% if project.problem %}
+            <section class="case-section" aria-labelledby="case-task">
+              <h2 id="case-task">{{ strings.case_task }}</h2>
+              {% for para in project.problem %}<p>{{ para }}</p>{% endfor %}
+            </section>
+          {% endif %}
+          {% if project.solution %}
+            <section class="case-section" aria-labelledby="case-solution">
+              <h2 id="case-solution">{{ strings.case_solution }}</h2>
+              {% for para in project.solution %}<p>{{ para }}</p>{% endfor %}
+            </section>
+          {% endif %}
+          {% if project.highlights %}
+            <section class="case-section" aria-labelledby="case-key">
+              <h2 id="case-key">{{ strings.project_highlights }}</h2>
+              <ul class="highlights">{% for h in project.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
+            </section>
+          {% endif %}
+          {% if project.result %}
+            <section class="case-section" aria-labelledby="case-result">
+              <h2 id="case-result">{{ strings.case_result }}</h2>
+              {% for para in project.result %}<p>{{ para }}</p>{% endfor %}
+            </section>
+          {% endif %}
+        </div>
+
+        <aside class="case-meta">
+          <dl>
+            <div><dt>{{ strings.case_role }}</dt><dd>{{ strings.case_role_value }}</dd></div>
+            {% if project.tags %}<div><dt>{{ strings.skills_title }}</dt><dd>{{ project.tags|join:" · " }}</dd></div>{% endif %}
+            <div><dt>{{ strings.case_status }}</dt><dd>{{ project.status_label }}</dd></div>
+            {% if project.link or project.github %}
+              <div><dt>{{ strings.case_links }}</dt><dd class="case-meta-links">
+                {% if project.link %}<a href="{{ project.link }}" target="_blank" rel="noopener">{{ strings.project_link }} <span aria-hidden="true">↗</span></a>{% endif %}
+                {% if project.github %}<a href="{{ project.github }}" target="_blank" rel="noopener">{{ strings.project_code }} <span aria-hidden="true">↗</span></a>{% endif %}
+              </dd></div>
+            {% endif %}
+          </dl>
+        </aside>
+      </div>
+
+      <section class="case-cta" aria-labelledby="case-cta-title">
+        <div>
+          <h2 id="case-cta-title">{{ strings.case_cta_title }}</h2>
+          <p>{{ strings.case_cta_text }}</p>
+        </div>
+        <div class="case-cta-actions">
+          {% if telegram_url %}<a class="btn btn-primary" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }}</a>
+          <a class="btn btn-ghost" href="/{{ lang }}/#contact">{{ strings.case_cta_btn }}</a>
+          {% else %}<a class="btn btn-primary" href="/{{ lang }}/#contact">{{ strings.case_cta_btn }}</a>{% endif %}
+        </div>
+      </section>
+
+      {% if next_project %}
+        <a class="case-next" href="{% url 'portfolio:case' lang next_project.slug %}">
+          <span class="case-next-label">{{ strings.case_next }}</span>
+          <span class="case-next-title">{{ next_project.title }} <span aria-hidden="true">→</span></span>
+          <span class="case-next-desc">{{ next_project.desc }}</span>
+        </a>
+      {% endif %}
+    </div>
+  </article>
+{% endblock %}

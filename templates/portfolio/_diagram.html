@@ -2,7 +2,8 @@
    Two drawings of the same graph — horizontal for desktop, vertical for
    phones (a scaled-down horizontal one would be unreadable at 390px).
    Each node carries its own explanation; script.js shows it in the caption
-   on hover/focus. Without JS the caption shows a default line.{% endcomment %}
+   on hover/focus and turns each drawing into a single Tab stop (arrow keys
+   move between nodes). Without JS every node is focusable and labelled.{% endcomment %}
 <figure class="diagram" aria-labelledby="diagram-title">
   <figcaption class="diagram-head">
     <span id="diagram-title">{{ strings.diagram_title }}</span>
@@ -30,8 +31,8 @@
     <g class="node node-core" tabindex="0" data-detail="{{ strings.d_app }}" aria-label="{{ strings.n_app }}: {{ strings.d_app }}"><rect x="352" y="84" width="240" height="40" rx="8"/><text x="366" y="109">{{ strings.n_app }}</text><circle class="pulse" cx="352" cy="84" r="4"/></g>
     <g class="node" tabindex="0" data-detail="{{ strings.d_db }}" aria-label="{{ strings.n_db }}: {{ strings.d_db }}"><rect x="392" y="168" width="176" height="56" rx="8"/><text x="406" y="192">{{ strings.n_db }}</text><text class="sub" x="406" y="211">{{ strings.n_db_sub }}</text></g>
     <g class="node" tabindex="0" data-detail="{{ strings.d_ai }}" aria-label="{{ strings.n_ai }}: {{ strings.d_ai }}"><rect x="190" y="256" width="130" height="40" rx="8"/><text x="204" y="281">{{ strings.n_ai }}</text></g>
-    <g class="node" tabindex="0" data-detail="{{ strings.d_backup }}" aria-label="{{ strings.n_backup }}: {{ strings.d_backup }}"><rect x="352" y="256" width="114" height="40" rx="8"/><text x="362" y="281">{{ strings.n_backup }}</text></g>
-    <g class="node" tabindex="0" data-detail="{{ strings.d_alerts }}" aria-label="{{ strings.n_alerts }}: {{ strings.d_alerts }}"><rect x="478" y="256" width="114" height="40" rx="8"/><text x="488" y="281">{{ strings.n_alerts }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_backup }}" aria-label="{{ strings.n_backup }}: {{ strings.d_backup }}"><rect x="344" y="256" width="120" height="40" rx="8"/><text x="354" y="281">{{ strings.n_backup }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_alerts }}" aria-label="{{ strings.n_alerts }}: {{ strings.d_alerts }}"><rect x="472" y="256" width="120" height="40" rx="8"/><text x="482" y="281">{{ strings.n_alerts }}</text></g>
   </svg>
 
   <svg class="diagram-svg diagram-tall" viewBox="0 0 340 372" role="group" aria-label="{{ strings.diagram_title }}">

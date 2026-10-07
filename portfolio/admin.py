@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import ContactMessage, Project, SocialLink
+from .models import ContactMessage, Project, SiteProfile, SocialLink
 
 
 @admin.register(SocialLink)
@@ -15,7 +15,7 @@ class SocialLinkAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("title_uz", "tier", "status", "order", "is_active", "has_cover")
+    list_display = ("title_uz", "tier", "status", "order", "is_active", "has_case_page", "has_cover")
     list_editable = ("tier", "status", "order", "is_active")
     list_filter = ("tier", "status", "is_active")
     search_fields = ("title_uz", "title_ru", "title_en", "tags")
@@ -23,12 +23,26 @@ class ProjectAdmin(admin.ModelAdmin):
     readonly_fields = ("cover_preview",)
     fieldsets = (
         ("Ko'rinish", {"fields": ("slug", "tier", "status", "order", "is_active")}),
-        ("O'zbekcha", {"fields": ("title_uz", "desc_uz", "highlights_uz")}),
-        ("Русский", {"fields": ("title_ru", "desc_ru", "highlights_ru")}),
-        ("English", {"fields": ("title_en", "desc_en", "highlights_en")}),
+        ("O'zbekcha", {"fields": ("title_uz", "desc_uz", "facts_uz")}),
+        ("Русский", {"fields": ("title_ru", "desc_ru", "facts_ru")}),
+        ("English", {"fields": ("title_en", "desc_en", "facts_en")}),
         ("Havolalar va texnologiyalar", {"fields": ("link", "github", "tags")}),
+        (
+            "Case sahifasi — O'zbekcha",
+            {
+                "description": "Vazifa yoki yechim to'ldirilsa, loyiha uchun alohida sahifa ochiladi "
+                "(/uz/work/&lt;slug&gt;/) va kartada «Batafsil» havolasi chiqadi.",
+                "fields": ("problem_uz", "solution_uz", "result_uz", "highlights_uz"),
+            },
+        ),
+        ("Case sahifasi — Русский", {"classes": ("collapse",), "fields": ("problem_ru", "solution_ru", "result_ru", "highlights_ru")}),
+        ("Case sahifasi — English", {"classes": ("collapse",), "fields": ("problem_en", "solution_en", "result_en", "highlights_en")}),
         ("Muqova", {"fields": ("cover", "cover_preview")}),
     )
+
+    @admin.display(boolean=True, description="Case sahifa")
+    def has_case_page(self, obj):
+        return obj.has_case
 
     @admin.display(boolean=True, description="Muqova")
     def has_cover(self, obj):
@@ -60,3 +74,17 @@ class ContactMessageAdmin(admin.ModelAdmin):
     @admin.action(description="O'qilgan deb belgilash")
     def mark_read(self, request, queryset):
         queryset.update(is_read=True)
+
+
+@admin.register(SiteProfile)
+class SiteProfileAdmin(admin.ModelAdmin):
+    fieldsets = (
+        (None, {"fields": ("full_name",)}),
+        ("Men haqimda", {"fields": ("about_uz", "about_ru", "about_en")}),
+    )
+
+    def has_add_permission(self, request):
+        return not SiteProfile.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
