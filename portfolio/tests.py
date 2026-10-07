@@ -190,12 +190,14 @@ class IndexPageTests(TestCase):
     def test_only_linked_social_icons_are_shown(self):
         html = self.get()
         for url in ("https://github.com/ShohzoDev", "https://t.me/ShohzoDev",
-                    "https://www.instagram.com/ShohzoDev/", "https://x.com/ShohzoDev"):
+                    "https://www.instagram.com/ShohzoDev/", "https://x.com/ShohzoDev",
+                    "https://www.facebook.com/ShohzoDev"):
             self.assertIn(f'href="{url}"', html)
         self.assertNotIn("ShohzoDev0108", html)
-        self.assertNotIn('title="Facebook"', html)  # no URL yet
-        SocialLink.objects.filter(platform="facebook").update(url="https://facebook.com/someone")
-        self.assertIn('title="Facebook"', self.get())
+        SocialLink.objects.create(platform="linkedin", url="")  # no URL yet
+        self.assertNotIn('title="LinkedIn"', self.get())
+        SocialLink.objects.filter(platform="linkedin").update(url="https://linkedin.com/in/someone")
+        self.assertIn('title="LinkedIn"', self.get())
         self.assertIn('<meta name="twitter:creator" content="@ShohzoDev">', html)
 
     def test_telegram_link_becomes_the_main_contact_button(self):
