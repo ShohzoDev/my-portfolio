@@ -214,8 +214,17 @@ def _home_context(request, lang, form=None, sent=False):
     live_count = sum(1 for p in projects if p["status"] == Project.Status.LIVE)
     person = _person(request, lang, context["profile"], strings, context["social_links"],
                      context["github_url"], context["contact_email"], skills)
+    profile = context["profile"]
+    now_text = (getattr(profile, f"now_{lang}", "") or "").strip()
+    now_url = ""
+    if now_text and profile.now_project_id:
+        target = next((p for p in projects if p["slug"] == profile.now_project.slug and p["has_case"]), None)
+        if target:
+            now_url = reverse("portfolio:case", args=[lang, target["slug"]])
     context.update(
         {
+            "now_text": now_text or strings["fact_status_value"],
+            "now_url": now_url,
             "featured_projects": [p for p in projects if p["tier"] == Project.Tier.FEATURED],
             "other_projects": [p for p in projects if p["tier"] != Project.Tier.FEATURED],
             "skills": skills,

@@ -261,6 +261,24 @@ class IndexPageTests(TestCase):
         for href in re.findall(r'<a href="(#[a-z-]+)"', html):
             self.assertIn(f'id="{href[1:]}"', html, href)
 
+    def test_zebest_founder_and_now_status(self):
+        for lang in SUPPORTED_LANGUAGES:
+            html = self.get(lang)
+            card = html[html.index('id="p-zebest"'):]
+            card = card[:card.index("</article>")]
+            self.assertIn(STRINGS[lang]["founder_label"], card)
+            self.assertIn(f'<a class="status-pill" href="/{lang}/work/zebest/">', html)
+        buildops = html[html.index('id="p-buildops"'):]
+        self.assertNotIn("founder-tag", buildops[:buildops.index("</article>")])
+        case = self.client.get("/en/work/zebest/").content.decode()
+        self.assertIn(STRINGS["en"]["case_role_founder"], case)
+        self.assertIn("about to launch", case)
+
+    def test_now_status_falls_back_when_empty(self):
+        SiteProfile.objects.update(now_uz="", now_project=None)
+        html = self.get("uz")
+        self.assertIn(f'<p class="status-pill"><span class="dot" aria-hidden="true"></span>{STRINGS["uz"]["fact_status_value"]}</p>', html)
+
     def test_robots_and_sitemap(self):
         robots = self.client.get(reverse("portfolio:robots_txt")).content.decode()
         self.assertNotIn("admin", robots)  # don't advertise the admin path

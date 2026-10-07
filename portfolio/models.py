@@ -136,6 +136,11 @@ class Project(models.Model):
     )
     order = models.PositiveIntegerField("Tartib", default=0)
     is_active = models.BooleanField("Saytda ko'rsatilsin", default=True)
+    is_founder = models.BooleanField(
+        "Men asoschiman",
+        default=False,
+        help_text="Kartada «Asoschi» belgisi chiqadi, case sahifasida rol «Asoschi» deb ko'rsatiladi.",
+    )
 
     class Meta:
         ordering = ["order", "id"]
@@ -181,6 +186,7 @@ class Project(models.Model):
             "solution": self._paragraphs(field("solution")),
             "result": self._paragraphs(field("result")),
             "has_case": self.has_case,
+            "is_founder": self.is_founder,
             "status": self.status,
             "tier": self.tier,
             "link": self.link,
@@ -235,6 +241,22 @@ class SiteProfile(models.Model):
     about_uz = models.TextField("Men haqimda (UZ)", help_text="2–3 jumla. Bo'sh qator — yangi xatboshi.")
     about_ru = models.TextField("Men haqimda (RU)")
     about_en = models.TextField("Men haqimda (EN)")
+    now_uz = models.CharField(
+        "Hozir nima qilyapman (UZ)",
+        max_length=120,
+        blank=True,
+        help_text="Hero'dagi holat yozuvi. Bo'sh bo'lsa: «Yangi loyihalarga ochiqman».",
+    )
+    now_ru = models.CharField("Hozir nima qilyapman (RU)", max_length=120, blank=True)
+    now_en = models.CharField("Hozir nima qilyapman (EN)", max_length=120, blank=True)
+    now_project = models.ForeignKey(
+        "Project",
+        verbose_name="Holat yozuvi havolasi",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Tanlansa, holat yozuvi shu loyihaning case sahifasiga havola bo'ladi.",
+    )
 
     class Meta:
         verbose_name = "Sayt profili"

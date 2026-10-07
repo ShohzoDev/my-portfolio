@@ -122,7 +122,7 @@ STRINGS = {
         "how4_t": "Birinchi kundan production",
         "how4_d": "Zaxira, monitoring, HTTPS va xavfsizlik rejada boshidan bor — ishga tushgandan keyin emas.",
         "contact_email_label": "Email",
-        "status_launch": "Ishga tushirilmoqda",
+        "status_launch": "Ishga tushish arafasida",
         "case_more": "Batafsil",
         "case_back": "Barcha ishlar",
         "case_task": "Vazifa",
@@ -137,6 +137,8 @@ STRINGS = {
         "case_cta_btn": "Loyihani muhokama qilish",
         "case_next": "Keyingi loyiha",
         "contact_telegram_btn": "Telegram orqali yozish",
+        "founder_label": "Asoschi",
+        "case_role_founder": "Asoschi: mahsulot, arxitektura, kod va server",
     },
     "ru": {
         "nav_about": "Обо мне",
@@ -243,7 +245,7 @@ STRINGS = {
         "how4_t": "Продакшен с первого дня",
         "how4_d": "Бэкапы, мониторинг, HTTPS и безопасность заложены с самого начала, а не после запуска.",
         "contact_email_label": "Email",
-        "status_launch": "Запуск",
+        "status_launch": "Скоро запуск",
         "case_more": "Подробнее",
         "case_back": "Все работы",
         "case_task": "Задача",
@@ -258,6 +260,8 @@ STRINGS = {
         "case_cta_btn": "Обсудить проект",
         "case_next": "Следующий проект",
         "contact_telegram_btn": "Написать в Telegram",
+        "founder_label": "Основатель",
+        "case_role_founder": "Основатель: продукт, архитектура, код и серверы",
     },
     "en": {
         "nav_about": "About",
@@ -364,7 +368,7 @@ STRINGS = {
         "how4_t": "Production from day one",
         "how4_d": "Backups, monitoring, HTTPS and security are in the plan from the start, not bolted on after launch.",
         "contact_email_label": "Email",
-        "status_launch": "Launching",
+        "status_launch": "Launching soon",
         "case_more": "Case study",
         "case_back": "All work",
         "case_task": "The problem",
@@ -379,6 +383,8 @@ STRINGS = {
         "case_cta_btn": "Discuss a project",
         "case_next": "Next project",
         "contact_telegram_btn": "Message me on Telegram",
+        "founder_label": "Founder",
+        "case_role_founder": "Founder: product, architecture, code and servers",
     },
 }
 

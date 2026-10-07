@@ -4,7 +4,8 @@
   <section class="hero" id="top">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.fact_status_value }}</p>
+        {% if now_url %}<a class="status-pill" href="{{ now_url }}"><span class="dot" aria-hidden="true"></span>{{ now_text }} <span class="pill-arrow" aria-hidden="true">→</span></a>
+        {% else %}<p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ now_text }}</p>{% endif %}
         <h1 class="hero-title">{{ strings.hero_headline_pre }}<em>{{ strings.hero_headline_em }}</em>{{ strings.hero_headline_post }}</h1>
         <p class="hero-tagline">{{ strings.hero_tagline }}</p>
         <div class="hero-actions">
@@ -26,7 +27,7 @@
       <div class="work-grid">
         {% for p in featured_projects %}
           <article class="work-card reveal" id="p-{{ p.slug }}">
-            <p class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</p>
+            <p class="work-tags"><span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% if p.is_founder %}<span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}</p>
             <h3 class="work-title">{% if p.has_case %}<a href="{% url 'portfolio:case' lang p.slug %}">{{ p.title }}</a>{% else %}{{ p.title }}{% endif %}</h3>
             <p class="work-desc">{{ p.desc }}</p>
             {% if p.facts %}<ul class="work-facts">{% for f in p.facts %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}

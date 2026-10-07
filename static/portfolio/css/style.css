@@ -346,6 +346,9 @@ kbd {
   color: var(--mute);
   font: 400 12.5px/1.4 var(--mono);
 }
+a.status-pill { transition: border-color 0.15s, color 0.15s; }
+a.status-pill:hover { border-color: var(--acc); color: var(--ink); }
+.pill-arrow { color: var(--acc); }
 
 .hero-title {
   margin-top: 26px;
@@ -552,6 +555,18 @@ kbd {
   text-transform: uppercase;
 }
 .status .dot { background: currentColor; box-shadow: none; }
+
+.work-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 22px; }
+.founder-tag {
+  padding: 2px 8px;
+  border: 1px solid rgba(76, 154, 255, 0.45);
+  border-radius: 999px;
+  background: var(--acc-wash);
+  color: var(--acc);
+  font: 500 11px/1.5 var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
 .status-live { color: var(--ok); }
 .status-launch,
 .status-dev { color: var(--dev); }

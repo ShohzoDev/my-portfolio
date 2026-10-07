@@ -8,7 +8,7 @@
       <a class="case-back" href="/{{ lang }}/#projects"><span aria-hidden="true">←</span> {{ strings.case_back }}</a>
 
       <header class="case-head">
-        <p class="status status-{{ project.status }}"><span class="dot" aria-hidden="true"></span>{{ project.status_label }}</p>
+        <p class="work-tags"><span class="status status-{{ project.status }}"><span class="dot" aria-hidden="true"></span>{{ project.status_label }}</span>{% if project.is_founder %}<span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}</p>
         <h1 class="case-title">{{ project.title }}</h1>
         <p class="case-lead">{{ project.desc }}</p>
         {% if project.facts %}<ul class="work-facts case-facts">{% for f in project.facts %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
@@ -48,7 +48,7 @@
 
         <aside class="case-meta">
           <dl>
-            <div><dt>{{ strings.case_role }}</dt><dd>{{ strings.case_role_value }}</dd></div>
+            <div><dt>{{ strings.case_role }}</dt><dd>{% if project.is_founder %}{{ strings.case_role_founder }}{% else %}{{ strings.case_role_value }}{% endif %}</dd></div>
             {% if project.tags %}<div><dt>{{ strings.skills_title }}</dt><dd>{{ project.tags|join:" · " }}</dd></div>{% endif %}
             <div><dt>{{ strings.case_status }}</dt><dd>{{ project.status_label }}</dd></div>
             {% if project.link or project.github %}

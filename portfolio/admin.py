@@ -22,7 +22,7 @@ class ProjectAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title_en",)}
     readonly_fields = ("cover_preview",)
     fieldsets = (
-        ("Ko'rinish", {"fields": ("slug", "tier", "status", "order", "is_active")}),
+        ("Ko'rinish", {"fields": ("slug", "tier", "status", "order", "is_active", "is_founder")}),
         ("O'zbekcha", {"fields": ("title_uz", "desc_uz", "facts_uz")}),
         ("Русский", {"fields": ("title_ru", "desc_ru", "facts_ru")}),
         ("English", {"fields": ("title_en", "desc_en", "facts_en")}),
@@ -81,6 +81,7 @@ class SiteProfileAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("full_name",)}),
         ("Men haqimda", {"fields": ("about_uz", "about_ru", "about_en")}),
+        ("Hozirgi holat (hero)", {"fields": ("now_uz", "now_ru", "now_en", "now_project")}),
     )
 
     def has_add_permission(self, request):
