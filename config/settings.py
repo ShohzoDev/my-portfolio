@@ -188,7 +188,9 @@ SITE_OWNER_NAME = "Shohzod"
 # on GitHub, like your other projects). Put the real address in your local
 # .env (gitignored) — see .env.example.
 SITE_CONTACT_EMAIL = env("SITE_CONTACT_EMAIL", "contact@example.com")
-SITE_GITHUB_USERNAME = "ShohzoDev0108"
+SITE_GITHUB_USERNAME = "ShohzoDev"
+# The same handle on Telegram, Instagram and X (used for twitter:creator).
+SITE_SOCIAL_HANDLE = "ShohzoDev"
 
 # Contact form → Telegram. Optional: if either value is empty, messages are
 # still saved and visible in the admin panel, just not pushed to Telegram.

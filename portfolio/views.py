@@ -175,6 +175,7 @@ def _base_context(request, lang, path_for, *, on_home, projects):
         "telegram_url": telegram_url,
         "contact_email": email,
         "github_url": github_url,
+        "social_handle": settings.SITE_SOCIAL_HANDLE,
         "home_url": "" if on_home else f"/{lang}/",
         "canonical_url": request.build_absolute_uri(path_for(lang)),
         "alternates": alternates,

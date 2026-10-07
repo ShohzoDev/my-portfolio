@@ -156,7 +156,8 @@ class IndexPageTests(TestCase):
         data = json.loads(match.group(1))
         self.assertEqual(data["@type"], "Person")
         self.assertEqual(data["jobTitle"], STRINGS["en"]["hero_role"])
-        self.assertIn("https://github.com/ShohzoDev0108", data["sameAs"])
+        self.assertIn("https://github.com/ShohzoDev", data["sameAs"])
+        self.assertIn("https://t.me/ShohzoDev", data["sameAs"])
 
     def test_content_is_server_rendered(self):
         html = self.get()
@@ -188,12 +189,17 @@ class IndexPageTests(TestCase):
 
     def test_only_linked_social_icons_are_shown(self):
         html = self.get()
-        self.assertIn('href="https://github.com/ShohzoDev0108"', html)
-        self.assertNotIn('title="Instagram"', html)  # seeded without a URL
-        SocialLink.objects.filter(platform="instagram").update(url="https://instagram.com/someone")
-        self.assertIn('title="Instagram"', self.get())
+        for url in ("https://github.com/ShohzoDev", "https://t.me/ShohzoDev",
+                    "https://www.instagram.com/ShohzoDev/", "https://x.com/ShohzoDev"):
+            self.assertIn(f'href="{url}"', html)
+        self.assertNotIn("ShohzoDev0108", html)
+        self.assertNotIn('title="Facebook"', html)  # no URL yet
+        SocialLink.objects.filter(platform="facebook").update(url="https://facebook.com/someone")
+        self.assertIn('title="Facebook"', self.get())
+        self.assertIn('<meta name="twitter:creator" content="@ShohzoDev">', html)
 
     def test_telegram_link_becomes_the_main_contact_button(self):
+        SocialLink.objects.filter(platform="telegram").update(url="")
         self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
         SocialLink.objects.filter(platform="telegram").update(url="https://t.me/someone")
         html = self.get("en")

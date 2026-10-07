@@ -1,6 +1,6 @@
 # Shohzod — Developer Portfolio
 
-[![tests](https://github.com/ShohzoDev0108/my-portfolio/actions/workflows/tests.yml/badge.svg)](https://github.com/ShohzoDev0108/my-portfolio/actions/workflows/tests.yml)
+[![tests](https://github.com/ShohzoDev/my-portfolio/actions/workflows/tests.yml/badge.svg)](https://github.com/ShohzoDev/my-portfolio/actions/workflows/tests.yml)
 
 Personal portfolio of a Django backend engineer, built with Django 5.2.
 Server-rendered, trilingual (Uzbek / Russian / English) and fully usable
