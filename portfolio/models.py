@@ -138,6 +138,10 @@ class ContactMessage(models.Model):
     contact = models.CharField("Aloqa (email / Telegram / telefon)", max_length=200)
     message = models.TextField("Xabar", max_length=4000)
     lang = models.CharField("Til", max_length=2, blank=True)
+    # Salted hash of the sender's IP — enough to rate-limit per sender
+    # (works across all gunicorn workers, unlike an in-memory cache) without
+    # storing the raw IP address.
+    ip_hash = models.CharField(max_length=64, blank=True, db_index=True, editable=False)
     created_at = models.DateTimeField("Yuborilgan", auto_now_add=True)
     is_read = models.BooleanField("O'qildi", default=False)
     telegram_sent = models.BooleanField("Telegramga yuborildi", default=False)

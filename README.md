@@ -1,7 +1,9 @@
 # Shohzod — Portfolio
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
-`/uz/`, `/ru/`, `/en/`), qorong'i-jasur uslubda. JavaScript o'chirilgan
+`/uz/`, `/ru/`, `/en/`), "Blueprint" tuzilishi va muhandislik ko'k
+palitrasida: hero'da interaktiv arxitektura diagrammasi, "Qanday quraman"
+tamoyillari, ixcham "Stek" qatorlari. JavaScript o'chirilgan
 holatda ham to'liq ishlaydi. Lighthouse (production rejimida): mobil
 99/100/100/100, desktop 100/100/100/100.
 
@@ -16,8 +18,8 @@ portfolio/
   views.py                 — sahifa, til yo'naltirish, aloqa formasi, robots/sitemap
   forms.py                 — aloqa formasi (+ spam-tuzoq)
   notifications.py         — yangi xabarni Telegramga yuborish
-  tests.py                 — 37 ta avtomatik test
-templates/portfolio/       — index.html + qismlar (_socials, _project_links)
+  tests.py                 — 47 ta avtomatik test
+templates/portfolio/       — index.html + qismlar (_diagram, _socials, _project_links)
 static/portfolio/          — css (style + o'z serverimizdagi shriftlar), js, rasmlar, fonts/
 ```
 
@@ -77,9 +79,18 @@ Telegramga ham kelishi uchun:
    TELEGRAM_CHAT_ID=123456789
    ```
 
-Spamdan himoya: ko'rinmas "tuzoq" maydon (botlar to'ldiradi, odamlar
-ko'rmaydi) va bir IP'dan soatiga 5 tagacha xabar
-(`CONTACT_RATE_LIMIT_PER_HOUR`).
+Spamdan himoya:
+
+- ko'rinmas "tuzoq" maydon (`leave_empty` — botlar to'ldiradi, odamlar
+  ko'rmaydi; brauzer avtomatik to'ldiradigan nom emas);
+- bir IP'dan soatiga 5 tagacha xabar (`CONTACT_RATE_LIMIT_PER_HOUR`) va
+  butun sayt bo'yicha soatiga 30 tagacha (`CONTACT_GLOBAL_LIMIT_PER_HOUR`).
+  Hisob bazada yuritiladi — bir nechta gunicorn worker'da ham, qayta
+  ishga tushirishdan keyin ham ishlaydi. IP o'zi saqlanmaydi, faqat
+  SECRET_KEY bilan olingan hash'i.
+- `CONTACT_TRUST_PROXY_HEADERS=True` faqat sayt nginx yoki PythonAnywhere
+  orqasida turganda yoqiladi (ular `X-Real-IP` ni o'zi qo'yadi). Proksisiz
+  yoqilsa, har kim sarlavhani soxtalashtirib limitni aylanib o'tadi.
 
 ## Production — xavfsizlik
 
@@ -100,7 +111,8 @@ ko'rmaydi) va bir IP'dan soatiga 5 tagacha xabar
 2. Web tab → Manual configuration → WSGI faylda `config.wsgi.application`.
 3. Static files: `/static/` → `.../staticfiles`, `/media/` → `.../media`.
 4. Environment: `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY=...`,
-   `DJANGO_ALLOWED_HOSTS=<username>.pythonanywhere.com`.
+   `DJANGO_ALLOWED_HOSTS=<username>.pythonanywhere.com`,
+   `CONTACT_TRUST_PROXY_HEADERS=True`.
 5. `python manage.py migrate` va `python manage.py collectstatic --noinput`.
 6. Web tab → **Reload**.
 
@@ -126,6 +138,8 @@ proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 ```
 
+va `.env` da `CONTACT_TRUST_PROXY_HEADERS=True`.
+
 ## SEO
 
 Har bir til alohida URL'da, `hreflang` + `x-default`, kanonik havola,
@@ -135,7 +149,8 @@ alternativlari bilan). Ijtimoiy tarmoqda ulashish rasmi:
 
 ## Shriftlar
 
-Inter, Space Grotesk, JetBrains Mono — o'z serverimizda
+IBM Plex Sans (sarlavha va matn), IBM Plex Mono (metama'lumot) — o'z
+serverimizda
 (`static/portfolio/fonts/`, SIL Open Font License, litsenziyalar shu
 papkada). Faqat lotin va kirill qismlari; brauzer faqat sahifaga kerakli
 qismni yuklaydi.

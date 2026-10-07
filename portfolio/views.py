@@ -1,10 +1,12 @@
+import hashlib
 import json
+from datetime import timedelta
 
 from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_GET, require_POST
@@ -130,8 +132,8 @@ def _build_context(request, lang, form=None, sent=False):
         for key, target in (
             ("nav_top", "#top"),
             ("nav_about", "#about"),
-            ("nav_skills", "#skills"),
             ("nav_projects", "#projects"),
+            ("nav_skills", "#stack"),
             ("nav_contact", "#contact"),
         )
     ]
@@ -196,31 +198,36 @@ def index(request, lang):
 # ---------------------------------------------------------------------------
 
 def _client_ip(request):
-    """Best-effort client IP behind nginx / PythonAnywhere.
+    """Client IP for rate limiting.
 
-    X-Real-IP (set by the proxy) first, then the right-most X-Forwarded-For
-    entry — the one our own proxy appended, which the client can't forge.
+    Proxy headers are only trusted when CONTACT_TRUST_PROXY_HEADERS is on
+    (i.e. nginx / PythonAnywhere sits in front and sets them). Then we use
+    X-Real-IP, or the right-most X-Forwarded-For entry — the one our own
+    proxy appended, which the client cannot forge. Otherwise REMOTE_ADDR.
     """
-    real_ip = request.META.get("HTTP_X_REAL_IP", "").strip()
-    if real_ip:
-        return real_ip
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded:
-        return forwarded.split(",")[-1].strip()
+    if settings.CONTACT_TRUST_PROXY_HEADERS:
+        real_ip = request.META.get("HTTP_X_REAL_IP", "").strip()
+        if real_ip:
+            return real_ip
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if forwarded:
+            return forwarded.split(",")[-1].strip()
     return request.META.get("REMOTE_ADDR", "unknown")
 
 
-def _rate_limited(request):
-    key = f"contact-rate:{_client_ip(request)}"
-    added = cache.add(key, 1, timeout=60 * 60)
-    if added:
-        return False
-    try:
-        count = cache.incr(key)
-    except ValueError:  # expired between add() and incr()
-        cache.add(key, 1, timeout=60 * 60)
-        return False
-    return count > settings.CONTACT_RATE_LIMIT_PER_HOUR
+def _ip_hash(ip):
+    return hashlib.sha256(f"{settings.SECRET_KEY}:{ip}".encode()).hexdigest()
+
+
+def _rate_limited(ip_hash):
+    """Counted in the database, so the limit holds across every gunicorn
+    worker and survives restarts (an in-memory cache would give each worker
+    its own counter)."""
+    since = timezone.now() - timedelta(hours=1)
+    recent = ContactMessage.objects.filter(created_at__gte=since)
+    if recent.filter(ip_hash=ip_hash).count() >= settings.CONTACT_RATE_LIMIT_PER_HOUR:
+        return True
+    return recent.count() >= settings.CONTACT_GLOBAL_LIMIT_PER_HOUR
 
 
 @require_POST
@@ -236,7 +243,8 @@ def contact_submit(request, lang):
             return JsonResponse({"ok": True, "message": strings["form_success"]})
         return HttpResponseRedirect(success_url)
 
-    if _rate_limited(request):
+    ip_hash = _ip_hash(_client_ip(request))
+    if _rate_limited(ip_hash):
         if wants_json:
             return JsonResponse({"ok": False, "message": strings["form_rate"], "errors": {}}, status=429)
         form.add_error(None, strings["form_rate"])
@@ -255,6 +263,7 @@ def contact_submit(request, lang):
         contact=form.cleaned_data["contact"],
         message=form.cleaned_data["message"],
         lang=lang,
+        ip_hash=ip_hash,
     )
     if notify_new_message(msg):
         ContactMessage.objects.filter(pk=msg.pk).update(telegram_sent=True)

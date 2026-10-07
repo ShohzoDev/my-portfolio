@@ -9,7 +9,10 @@ class ContactForm(forms.Form):
     message = forms.CharField(max_length=4000, widget=forms.Textarea)
     # Honeypot: hidden from people with CSS + aria-hidden + tabindex=-1, but
     # naive spam bots fill every field they find. Non-empty → silently dropped.
-    website = forms.CharField(required=False)
+    # Deliberately NOT named "website"/"url"/"company": browsers and password
+    # managers autofill fields with such names, which would silently swallow
+    # a real visitor's message.
+    leave_empty = forms.CharField(required=False)
 
     def __init__(self, *args, lang="uz", **kwargs):
         super().__init__(*args, **kwargs)
@@ -22,4 +25,4 @@ class ContactForm(forms.Form):
 
     @property
     def is_spam(self):
-        return bool(self.data.get("website", "").strip())
+        return bool(self.data.get("leave_empty", "").strip())

@@ -1,0 +1,63 @@
+{% comment %}Architecture diagram: the real components behind the systems he builds.
+   Two drawings of the same graph — horizontal for desktop, vertical for
+   phones (a scaled-down horizontal one would be unreadable at 390px).
+   Each node carries its own explanation; script.js shows it in the caption
+   on hover/focus. Without JS the caption shows a default line.{% endcomment %}
+<figure class="diagram" aria-labelledby="diagram-title">
+  <figcaption class="diagram-head">
+    <span id="diagram-title">{{ strings.diagram_title }}</span>
+    <span class="diagram-hint" aria-hidden="true">{{ strings.diagram_hint }}</span>
+  </figcaption>
+
+  <svg class="diagram-svg diagram-wide" viewBox="0 0 600 316" role="group" aria-label="{{ strings.diagram_title }}">
+    <defs>
+      <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="arrow-head"/></marker>
+    </defs>
+    <g class="edges" marker-end="url(#arw)">
+      <path d="M142 44 C166 44,166 104,188 104"/>
+      <path d="M142 104 H188"/>
+      <path d="M142 164 C166 164,166 104,188 104"/>
+      <path d="M308 104 H350"/>
+      <path d="M490 124 V166"/>
+      <path d="M372 124 C372 210,300 214,262 254"/>
+      <path d="M420 224 V254"/>
+      <path d="M582 124 C602 175,600 222,548 254"/>
+    </g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_browser }}" aria-label="{{ strings.n_browser }}: {{ strings.d_browser }}"><rect x="8" y="24" width="134" height="40" rx="8"/><text x="22" y="49">{{ strings.n_browser }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_pwa }}" aria-label="{{ strings.n_pwa }}: {{ strings.d_pwa }}"><rect x="8" y="84" width="134" height="40" rx="8"/><text x="22" y="109">{{ strings.n_pwa }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_bot }}" aria-label="{{ strings.n_bot }}: {{ strings.d_bot }}"><rect x="8" y="144" width="134" height="40" rx="8"/><text x="22" y="169">{{ strings.n_bot }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_cdn }}" aria-label="{{ strings.n_cdn }}: {{ strings.d_cdn }}"><rect x="190" y="84" width="118" height="40" rx="8"/><text x="204" y="109">{{ strings.n_cdn }}</text></g>
+    <g class="node node-core" tabindex="0" data-detail="{{ strings.d_app }}" aria-label="{{ strings.n_app }}: {{ strings.d_app }}"><rect x="352" y="84" width="240" height="40" rx="8"/><text x="366" y="109">{{ strings.n_app }}</text><circle class="pulse" cx="352" cy="84" r="4"/></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_db }}" aria-label="{{ strings.n_db }}: {{ strings.d_db }}"><rect x="392" y="168" width="176" height="56" rx="8"/><text x="406" y="192">{{ strings.n_db }}</text><text class="sub" x="406" y="211">{{ strings.n_db_sub }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_ai }}" aria-label="{{ strings.n_ai }}: {{ strings.d_ai }}"><rect x="190" y="256" width="130" height="40" rx="8"/><text x="204" y="281">{{ strings.n_ai }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_backup }}" aria-label="{{ strings.n_backup }}: {{ strings.d_backup }}"><rect x="352" y="256" width="114" height="40" rx="8"/><text x="362" y="281">{{ strings.n_backup }}</text></g>
+    <g class="node" tabindex="0" data-detail="{{ strings.d_alerts }}" aria-label="{{ strings.n_alerts }}: {{ strings.d_alerts }}"><rect x="478" y="256" width="114" height="40" rx="8"/><text x="488" y="281">{{ strings.n_alerts }}</text></g>
+  </svg>
+
+  <svg class="diagram-svg diagram-tall" viewBox="0 0 340 372" role="group" aria-label="{{ strings.diagram_title }}">
+    <defs>
+      <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="arrow-head"/></marker>
+    </defs>
+    <g class="edges" marker-end="url(#arw2)">
+      <path d="M57 48 C57 66,150 66,160 84"/>
+      <path d="M170 48 V84"/>
+      <path d="M283 48 C283 66,190 66,180 84"/>
+      <path d="M170 122 V154"/>
+      <path d="M170 192 V224"/>
+      <path d="M60 192 C40 260,50 300,57 316"/>
+      <path d="M170 276 V316"/>
+      <path d="M280 192 C304 260,290 300,283 316"/>
+    </g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_browser }}: {{ strings.d_browser }}" data-detail="{{ strings.d_browser }}"><rect x="4" y="10" width="106" height="38" rx="8"/><text x="57" y="34" text-anchor="middle">{{ strings.n_browser }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_pwa }}: {{ strings.d_pwa }}" data-detail="{{ strings.d_pwa }}"><rect x="117" y="10" width="106" height="38" rx="8"/><text x="170" y="34" text-anchor="middle">{{ strings.n_pwa }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_bot }}: {{ strings.d_bot }}" data-detail="{{ strings.d_bot }}"><rect x="230" y="10" width="106" height="38" rx="8"/><text x="283" y="34" text-anchor="middle">{{ strings.n_bot }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_cdn }}: {{ strings.d_cdn }}" data-detail="{{ strings.d_cdn }}"><rect x="100" y="84" width="140" height="38" rx="8"/><text x="170" y="108" text-anchor="middle">{{ strings.n_cdn }}</text></g>
+    <g class="node node-core" tabindex="0" aria-label="{{ strings.n_app }}: {{ strings.d_app }}" data-detail="{{ strings.d_app }}"><rect x="20" y="154" width="300" height="38" rx="8"/><text x="170" y="178" text-anchor="middle">{{ strings.n_app }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_db }}: {{ strings.d_db }}" data-detail="{{ strings.d_db }}"><rect x="80" y="224" width="180" height="52" rx="8"/><text x="170" y="246" text-anchor="middle">{{ strings.n_db }}</text><text class="sub" x="170" y="264" text-anchor="middle">{{ strings.n_db_sub }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_ai }}: {{ strings.d_ai }}" data-detail="{{ strings.d_ai }}"><rect x="4" y="316" width="106" height="38" rx="8"/><text x="57" y="340" text-anchor="middle">{{ strings.n_ai }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_backup }}: {{ strings.d_backup }}" data-detail="{{ strings.d_backup }}"><rect x="117" y="316" width="106" height="38" rx="8"/><text x="170" y="340" text-anchor="middle">{{ strings.n_backup }}</text></g>
+    <g class="node" tabindex="0" aria-label="{{ strings.n_alerts }}: {{ strings.d_alerts }}" data-detail="{{ strings.d_alerts }}"><rect x="230" y="316" width="106" height="38" rx="8"/><text x="283" y="340" text-anchor="middle">{{ strings.n_alerts }}</text></g>
+  </svg>
+
+  <p class="diagram-caption" id="diagram-caption" aria-live="polite" data-default="{{ strings.diagram_default }}">{{ strings.diagram_default }}</p>
+</figure>

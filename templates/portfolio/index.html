@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a0c0f">
+<meta name="theme-color" content="#0d1117">
 <meta name="color-scheme" content="dark">
 <script>document.documentElement.classList.add("js")</script>
 <title>{{ strings.hero_name }} — {{ strings.hero_role }}</title>
@@ -32,9 +32,8 @@
 <meta name="twitter:description" content="{{ strings.hero_tagline }}">
 <meta name="twitter:image" content="{{ og_image_url }}">
 
-{% if lang == "ru" %}<link rel="preload" href="{% static 'portfolio/fonts/inter-cyrillic-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
-{% else %}<link rel="preload" href="{% static 'portfolio/fonts/inter-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="{% static 'portfolio/fonts/space-grotesk-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+{% if lang == "ru" %}<link rel="preload" href="{% static 'portfolio/fonts/ibm-plex-sans-cyrillic-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+{% else %}<link rel="preload" href="{% static 'portfolio/fonts/ibm-plex-sans-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
 {% endif %}<link rel="stylesheet" href="{% static 'portfolio/css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
 <script type="application/ld+json">{{ person_jsonld }}</script>
@@ -42,19 +41,21 @@
 <body>
 
 <a class="skip-link" href="#main">{{ strings.skip_link }}</a>
-<div class="bg-grid" aria-hidden="true"></div>
-<div class="bg-glow" aria-hidden="true"></div>
 
 <header class="site-header" id="site-header">
-  <div class="container">
-    <a href="#top" class="logo">Shohzod<span class="dot">.</span></a>
+  <div class="container header-inner">
+    <a href="#top" class="brand">
+      <img src="{% static 'portfolio/img/profile-400.webp' %}" alt="" width="32" height="32">
+      <span class="brand-name">Shohzod</span>
+      <span class="brand-role">/ {{ strings.hero_role }}</span>
+    </a>
 
     <div class="nav-desktop">
       <nav aria-label="{{ strings.menu_label }}">
         <ul class="nav-links">
           <li><a href="#about">{{ strings.nav_about }}</a></li>
-          <li><a href="#skills">{{ strings.nav_skills }}</a></li>
           <li><a href="#projects">{{ strings.nav_projects }}</a></li>
+          <li><a href="#stack">{{ strings.nav_skills }}</a></li>
           <li><a href="#contact">{{ strings.nav_contact }}</a></li>
         </ul>
       </nav>
@@ -75,8 +76,8 @@
 
 <nav class="nav-mobile" id="nav-mobile" aria-label="{{ strings.menu_label }}" aria-hidden="true">
   <a href="#about">{{ strings.nav_about }}</a>
-  <a href="#skills">{{ strings.nav_skills }}</a>
   <a href="#projects">{{ strings.nav_projects }}</a>
+  <a href="#stack">{{ strings.nav_skills }}</a>
   <a href="#contact">{{ strings.nav_contact }}</a>
   <div class="lang-switch" role="group" aria-label="{{ strings.lang_group_label }}">
     {% for alt in alternates %}<a href="/{{ alt.code }}/" hreflang="{{ alt.code }}" lang="{{ alt.code }}" title="{{ alt.name }}"{% if alt.code == lang %} class="active" aria-current="true"{% endif %}>{{ alt.code|upper }}</a>{% endfor %}
@@ -86,11 +87,10 @@
 <main id="main">
 
   <section class="hero" id="top">
-    <div class="container">
+    <div class="container hero-grid">
       <div class="hero-copy">
-        <p class="hero-greeting">{{ strings.hero_greeting }}</p>
-        <h1 class="hero-name">{{ strings.hero_name }}</h1>
-        <p class="hero-role">{{ strings.hero_role }}</p>
+        <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.fact_status_value }}</p>
+        <h1 class="hero-title">{{ strings.hero_headline_pre }}<em>{{ strings.hero_headline_em }}</em>{{ strings.hero_headline_post }}</h1>
         <p class="hero-tagline">{{ strings.hero_tagline }}</p>
         <div class="hero-actions">
           <a href="#projects" class="btn btn-primary">{{ strings.hero_cta_projects }}</a>
@@ -98,87 +98,65 @@
         </div>
         <div class="hero-socials">{% include "portfolio/_socials.html" %}</div>
       </div>
-
-      <div class="hero-visual">
-        <div class="hero-photo-wrap">
-          <span class="hero-corner tl" aria-hidden="true"></span>
-          <span class="hero-corner br" aria-hidden="true"></span>
-          <picture>
-            <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 480px) 78vw, 340px">
-            <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 480px) 78vw, 340px">
-            <img src="{% static 'portfolio/img/profile-800.jpg' %}" srcset="{% static 'portfolio/img/profile-400.jpg' %} 400w, {% static 'portfolio/img/profile-800.jpg' %} 800w" sizes="(max-width: 480px) 78vw, 340px" alt="{{ strings.hero_name }}" width="800" height="864" fetchpriority="high" decoding="async">
-          </picture>
-        </div>
-        {% if live_count %}
-        <div class="hero-badge">
-          <strong>{{ live_count }}</strong>
-          <span>{{ badge_label }}</span>
-        </div>
-        {% endif %}
-      </div>
+      {% include "portfolio/_diagram.html" %}
     </div>
   </section>
 
-  <section id="about">
+  <section id="about" class="section">
     <div class="container">
-      <p class="section-tag" aria-hidden="true">01</p>
       <h2 class="section-title reveal">{{ strings.about_title }}</h2>
       <div class="about-grid">
         <div class="about-text reveal">
-          <p>{{ strings.about_p1 }}</p>
+          <p class="lead">{{ strings.about_p1 }}</p>
           <p>{{ strings.about_p2 }}</p>
+          <p class="about-note"><span class="note-label">{{ strings.beyond_title }}</span> {{ strings.beyond_text }}</p>
         </div>
-        <dl class="about-facts reveal">
-          <div class="fact-row"><dt class="fact-label">{{ strings.fact_location_label }}</dt><dd class="fact-value">{{ strings.fact_location_value }}</dd></div>
-          <div class="fact-row"><dt class="fact-label">{{ strings.fact_focus_label }}</dt><dd class="fact-value">{{ strings.fact_focus_value }}</dd></div>
-          <div class="fact-row"><dt class="fact-label">{{ strings.fact_status_label }}</dt><dd class="fact-value"><span class="pulse-dot" aria-hidden="true"></span>{{ strings.fact_status_value }}</dd></div>
-          <div class="fact-row"><dt class="fact-label">{{ strings.fact_deploy_label }}</dt><dd class="fact-value">{{ strings.fact_deploy_value }}</dd></div>
-        </dl>
+        <aside class="spec reveal" aria-label="{{ strings.hero_name }}">
+          <picture class="spec-photo">
+            <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 760px) 90vw, 360px">
+            <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 760px) 90vw, 360px">
+            <img src="{% static 'portfolio/img/profile-800.jpg' %}" srcset="{% static 'portfolio/img/profile-400.jpg' %} 400w, {% static 'portfolio/img/profile-800.jpg' %} 800w" sizes="(max-width: 760px) 90vw, 360px" alt="{{ strings.hero_name }}" width="800" height="864" loading="lazy" decoding="async">
+          </picture>
+          <dl class="spec-rows">
+            <div><dt>{{ strings.fact_focus_label }}</dt><dd>{{ strings.fact_focus_value }}</dd></div>
+            <div><dt>{{ strings.fact_deploy_label }}</dt><dd>{{ strings.fact_deploy_value }}</dd></div>
+            <div><dt>{{ strings.fact_location_label }}</dt><dd>{{ strings.fact_location_value }}</dd></div>
+            {% if live_count %}<div><dt>{{ strings.fact_live_label }}</dt><dd><span class="dot" aria-hidden="true"></span>{{ live_count }} — {{ badge_label }}</dd></div>{% endif %}
+          </dl>
+        </aside>
       </div>
     </div>
   </section>
 
-  <section id="skills">
+  <section class="section section-how" aria-labelledby="how-title">
     <div class="container">
-      <p class="section-tag" aria-hidden="true">02</p>
-      <h2 class="section-title reveal">{{ strings.skills_title }}</h2>
-      <div class="skills-grid">
-        {% for group in skills %}
-          <div class="skill-card reveal">
-            <h3>{{ group.title }}</h3>
-            <ul class="tag-row">{% for tag in group.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
-          </div>
-        {% endfor %}
-      </div>
+      <h2 class="section-title reveal" id="how-title">{{ strings.how_title }}</h2>
+      <ol class="how-grid">
+        <li class="how-item reveal"><span class="how-n" aria-hidden="true">01</span><h3>{{ strings.how1_t }}</h3><p>{{ strings.how1_d }}</p></li>
+        <li class="how-item reveal"><span class="how-n" aria-hidden="true">02</span><h3>{{ strings.how2_t }}</h3><p>{{ strings.how2_d }}</p></li>
+        <li class="how-item reveal"><span class="how-n" aria-hidden="true">03</span><h3>{{ strings.how3_t }}</h3><p>{{ strings.how3_d }}</p></li>
+        <li class="how-item reveal"><span class="how-n" aria-hidden="true">04</span><h3>{{ strings.how4_t }}</h3><p>{{ strings.how4_d }}</p></li>
+      </ol>
     </div>
   </section>
 
-  <section id="projects">
+  <section id="projects" class="section">
     <div class="container">
-      <p class="section-tag" aria-hidden="true">03</p>
       <h2 class="section-title reveal">{{ strings.projects_title }}</h2>
 
       {% for p in featured_projects %}
-        <article class="project-card featured reveal{% if not p.cover and not p.highlights %} no-aside{% endif %}" id="p-{{ p.slug }}">
-          <div class="featured-body">
-            <div class="project-top">
-              <span class="featured-label">{{ strings.featured_label }}</span>
-              <span class="status-pill status-{{ p.status }}">{{ p.status_label }}</span>
-            </div>
-            <h3 class="project-title">{{ p.title }}</h3>
-            <p class="project-desc">{{ p.desc }}</p>
-            {% if p.cover and p.highlights %}
-              <ul class="highlights">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
-            {% endif %}
-            <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+        <article class="case reveal{% if not p.cover and not p.highlights %} no-aside{% endif %}" id="p-{{ p.slug }}">
+          <div class="case-facts">
+            <p class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}<span class="sep" aria-hidden="true">·</span>{{ strings.featured_label }}</p>
+            <h3 class="case-title">{{ p.title }}</h3>
+            <p class="case-desc">{{ p.desc }}</p>
+            {% if p.tags %}<dl class="case-meta"><div><dt>{{ strings.skills_title }}</dt><dd>{{ p.tags|join:" · " }}</dd></div></dl>{% endif %}
             {% include "portfolio/_project_links.html" %}
           </div>
           {% if p.cover %}
-            <div class="featured-aside featured-cover">
-              <img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">
-            </div>
+            <div class="case-aside case-cover"><img src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async"></div>
           {% elif p.highlights %}
-            <div class="featured-aside">
+            <div class="case-aside">
               <p class="aside-label">{{ strings.project_highlights }}</p>
               <ul class="highlights">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
             </div>
@@ -189,14 +167,12 @@
       {% if main_projects %}
       <div class="projects-grid">
         {% for p in main_projects %}
-          <article class="project-card reveal" id="p-{{ p.slug }}">
-            {% if p.cover %}<img class="project-cover" src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">{% endif %}
-            <div class="project-top">
-              <h3 class="project-title">{{ p.title }}</h3>
-              <span class="status-pill status-{{ p.status }}">{{ p.status_label }}</span>
-            </div>
-            <p class="project-desc">{{ p.desc }}</p>
-            <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+          <article class="card reveal" id="p-{{ p.slug }}">
+            {% if p.cover %}<img class="card-cover" src="{{ p.cover }}" alt="{{ p.title }}" loading="lazy" decoding="async">{% endif %}
+            <p class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</p>
+            <h3 class="card-title">{{ p.title }}</h3>
+            <p class="card-desc">{{ p.desc }}</p>
+            {% if p.tags %}<p class="card-stack">{{ p.tags|join:" · " }}</p>{% endif %}
             {% include "portfolio/_project_links.html" %}
           </article>
         {% endfor %}
@@ -214,7 +190,7 @@
                 <p>{{ p.desc }}</p>
               </div>
               <div class="other-meta">
-                <ul class="tag-row">{% for tag in p.tags %}<li class="tag">{{ tag }}</li>{% endfor %}</ul>
+                <p class="card-stack">{{ p.tags|join:" · " }}</p>
                 {% include "portfolio/_project_links.html" %}
               </div>
             </li>
@@ -222,86 +198,76 @@
         </ul>
       </div>
       {% endif %}
-
-      <div class="beyond reveal">
-        <div class="beyond-icon">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <path d="M3 15.5 8 4l4 8 2-4 3 7.5"/>
-          </svg>
-        </div>
-        <div>
-          <h3 class="beyond-title">{{ strings.beyond_title }}</h3>
-          <p>{{ strings.beyond_text }}</p>
-        </div>
-      </div>
     </div>
   </section>
 
-  <section id="contact">
+  <section id="stack" class="section">
     <div class="container">
-      <div class="contact-box reveal">
-        <span class="hero-corner tl" aria-hidden="true"></span>
-        <span class="hero-corner br" aria-hidden="true"></span>
+      <h2 class="section-title reveal">{{ strings.skills_title }}</h2>
+      <dl class="stack-rows reveal">
+        {% for group in skills %}
+          <div class="stack-row"><dt>{{ group.title }}</dt><dd>{% for tag in group.tags %}<span>{{ tag }}</span>{% endfor %}</dd></div>
+        {% endfor %}
+      </dl>
+    </div>
+  </section>
 
-        <div class="contact-intro">
-          <p class="section-tag" aria-hidden="true">04</p>
-          <h2 class="section-title">{{ strings.contact_title }}</h2>
-          <p class="contact-desc">{{ strings.contact_desc }}</p>
-          <p class="contact-or">{{ strings.contact_or }}</p>
-          <div class="contact-actions">
-            <a href="mailto:{{ contact_email }}" class="btn btn-primary">{{ strings.contact_email_btn }}</a>
-            <button type="button" class="btn btn-ghost btn-sm copy-email-btn" id="copy-email-btn" data-email="{{ contact_email }}" data-label="{{ strings.contact_email_copy }}" data-copied-label="{{ strings.contact_email_copied }}" hidden>
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <rect x="7" y="7" width="10" height="10" rx="1.5"/>
-                <path d="M4.5 13.5h-1a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/>
-              </svg>
-              <span class="copy-label">{{ strings.contact_email_copy }}</span>
-            </button>
-          </div>
-          <div class="contact-socials">{% include "portfolio/_socials.html" %}</div>
+  <section id="contact" class="section">
+    <div class="container contact-grid">
+      <div class="contact-intro reveal">
+        <h2 class="section-title">{{ strings.contact_title }}</h2>
+        <p class="contact-desc">{{ strings.contact_desc }}</p>
+        <p class="contact-or">{{ strings.contact_or }}</p>
+        <div class="email-line">
+          <a class="email-big" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+          <button type="button" class="btn btn-ghost btn-sm copy-email-btn" id="copy-email-btn" data-email="{{ contact_email }}" data-label="{{ strings.contact_email_copy }}" data-copied-label="{{ strings.contact_email_copied }}" hidden>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M4.5 13.5h-1a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>
+            <span class="copy-label">{{ strings.contact_email_copy }}</span>
+          </button>
+        </div>
+        <div class="contact-socials">{% include "portfolio/_socials.html" %}</div>
+      </div>
+
+      <form class="contact-form reveal" id="contact-form" method="post" action="{% url 'portfolio:contact' lang %}#contact" data-sending-label="{{ strings.form_sending }}" data-error-label="{{ strings.form_error }}">
+        {% csrf_token %}
+        <h3 class="form-title">{{ strings.form_title }}</h3>
+
+        <div class="field{% if form.name.errors %} has-error{% endif %}">
+          <label for="cf-name">{{ strings.form_name }}</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="120" required value="{{ form.name.value|default_if_none:'' }}"{% if form.name.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-name-err">
+          <p class="field-error" id="cf-name-err">{{ form.name.errors.0|default:'' }}</p>
         </div>
 
-        <form class="contact-form" id="contact-form" method="post" action="{% url 'portfolio:contact' lang %}#contact" data-sending-label="{{ strings.form_sending }}" data-error-label="{{ strings.form_error }}">
-          {% csrf_token %}
-          <h3 class="form-title">{{ strings.form_title }}</h3>
+        <div class="field{% if form.contact.errors %} has-error{% endif %}">
+          <label for="cf-contact">{{ strings.form_contact }}</label>
+          <input id="cf-contact" name="contact" type="text" autocomplete="email" maxlength="200" required value="{{ form.contact.value|default_if_none:'' }}"{% if form.contact.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-contact-err">
+          <p class="field-error" id="cf-contact-err">{{ form.contact.errors.0|default:'' }}</p>
+        </div>
 
-          <div class="field{% if form.name.errors %} has-error{% endif %}">
-            <label for="cf-name">{{ strings.form_name }}</label>
-            <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="120" required value="{{ form.name.value|default_if_none:'' }}"{% if form.name.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-name-err">
-            <p class="field-error" id="cf-name-err">{{ form.name.errors.0|default:'' }}</p>
-          </div>
+        <div class="field{% if form.message.errors %} has-error{% endif %}">
+          <label for="cf-message">{{ strings.form_message }}</label>
+          <textarea id="cf-message" name="message" rows="5" maxlength="4000" required placeholder="{{ strings.form_message_ph }}"{% if form.message.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-message-err">{{ form.message.value|default_if_none:'' }}</textarea>
+          <p class="field-error" id="cf-message-err">{{ form.message.errors.0|default:'' }}</p>
+        </div>
 
-          <div class="field{% if form.contact.errors %} has-error{% endif %}">
-            <label for="cf-contact">{{ strings.form_contact }}</label>
-            <input id="cf-contact" name="contact" type="text" autocomplete="email" maxlength="200" required value="{{ form.contact.value|default_if_none:'' }}"{% if form.contact.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-contact-err">
-            <p class="field-error" id="cf-contact-err">{{ form.contact.errors.0|default:'' }}</p>
-          </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="cf-leave-empty">Leave this field empty</label>
+          <input id="cf-leave-empty" name="leave_empty" type="text" tabindex="-1" autocomplete="off">
+        </div>
 
-          <div class="field{% if form.message.errors %} has-error{% endif %}">
-            <label for="cf-message">{{ strings.form_message }}</label>
-            <textarea id="cf-message" name="message" rows="5" maxlength="4000" required placeholder="{{ strings.form_message_ph }}"{% if form.message.errors %} aria-invalid="true"{% endif %} aria-describedby="cf-message-err">{{ form.message.value|default_if_none:'' }}</textarea>
-            <p class="field-error" id="cf-message-err">{{ form.message.errors.0|default:'' }}</p>
-          </div>
-
-          <div class="hp-field" aria-hidden="true">
-            <label for="cf-website">Website</label>
-            <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off">
-          </div>
-
-          <button type="submit" class="btn btn-primary form-submit">{{ strings.form_submit }}</button>
-          <p class="form-status{% if sent %} is-success{% elif form.errors %} is-error{% endif %}" id="form-status" role="status" aria-live="polite">{% if sent %}{{ strings.form_success }}{% elif form.non_field_errors %}{{ form.non_field_errors.0 }}{% elif form.errors %}{{ strings.form_error }}{% endif %}</p>
-        </form>
-      </div>
+        <button type="submit" class="btn btn-primary form-submit">{{ strings.form_submit }}</button>
+        <p class="form-status{% if sent %} is-success{% elif form.errors %} is-error{% endif %}" id="form-status" role="status" aria-live="polite">{% if sent %}{{ strings.form_success }}{% elif form.non_field_errors %}{{ form.non_field_errors.0 }}{% elif form.errors %}{{ strings.form_error }}{% endif %}</p>
+      </form>
     </div>
   </section>
 
 </main>
 
 <footer class="site-footer">
-  <div class="container">
-    <a href="#top" class="logo">Shohzod<span class="dot">.</span></a>
-    <span>&copy; {% now "Y" %} Shohzod — {{ strings.footer_rights }}</span>
-    <span>{{ strings.footer_built }}</span>
+  <div class="container footer-inner">
+    <span class="brand-name">Shohzod</span>
+    <span>&copy; {% now "Y" %} — {{ strings.footer_rights }}</span>
+    <span class="footer-built">{{ strings.footer_built }}</span>
   </div>
 </footer>
 

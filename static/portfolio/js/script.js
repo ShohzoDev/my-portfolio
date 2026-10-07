@@ -4,7 +4,8 @@
    Everything here is progressive enhancement: the server renders the full
    page in the right language (/uz/, /ru/, /en/), the contact form posts
    normally, language links are plain links. This script only adds polish:
-   reveal animations, scrollspy, mobile menu, copy-email, AJAX form submit
+   reveal animations, scrollspy, mobile menu, the architecture diagram
+   captions, copy-email, AJAX form submit
    and the ⌘K command palette.
    ========================================================================== */
 (() => {
@@ -47,7 +48,11 @@
   function initHeaderScroll() {
     const header = document.getElementById("site-header");
     if (!header) return;
-    const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 20);
+    // Read scroll position inside rAF: reading it synchronously during boot
+    // forces a layout before first paint.
+    let queued = false;
+    const update = () => { queued = false; header.classList.toggle("scrolled", window.scrollY > 20); };
+    const onScroll = () => { if (!queued) { queued = true; window.requestAnimationFrame(update); } };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
   }
@@ -163,6 +168,43 @@
     items.forEach((el) => observer.observe(el));
   }
 
+  /* ------------------------------------------------- architecture diagram */
+
+  // Hover or focus a node → its explanation replaces the caption. Leaving
+  // the node (or the whole diagram) restores the default line.
+  function initDiagram() {
+    const caption = document.getElementById("diagram-caption");
+    if (!caption) return;
+    const nodes = document.querySelectorAll(".diagram .node[data-detail]");
+    const fallback = caption.dataset.default || caption.textContent;
+    let current = null;
+
+    function show(node) {
+      if (current === node) return;
+      if (current) current.classList.remove("is-active");
+      current = node;
+      if (node) {
+        node.classList.add("is-active");
+        caption.textContent = node.dataset.detail;
+        caption.classList.add("is-detail");
+      } else {
+        caption.textContent = fallback;
+        caption.classList.remove("is-detail");
+      }
+    }
+
+    nodes.forEach((node) => {
+      node.addEventListener("mouseenter", () => show(node));
+      node.addEventListener("focus", () => show(node));
+      node.addEventListener("click", () => show(node)); // touch screens
+      node.addEventListener("mouseleave", () => { if (document.activeElement !== node) show(null); });
+      node.addEventListener("blur", () => show(null));
+      node.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") { node.blur(); show(null); }
+      });
+    });
+  }
+
   /* ---------------------------------------------------------- copy email */
 
   function initCopyEmail() {
@@ -214,33 +256,46 @@
       submit.disabled = true;
       submit.textContent = form.dataset.sendingLabel;
 
+      let response;
       try {
-        const response = await fetch(form.action.split("#")[0], {
+        response = await fetch(form.action.split("#")[0], {
           method: "POST",
           body: new FormData(form),
           headers: { "X-Requested-With": "fetch", Accept: "application/json" },
           credentials: "same-origin",
         });
-        const data = await response.json();
-        if (data.ok) {
-          form.reset();
-          setStatus(data.message, "success");
-        } else {
-          const errors = data.errors || {};
-          Object.entries(errors).forEach(([name, msg]) => setFieldError(name, msg));
-          setStatus(data.message, "error");
-          const firstInvalid = form.querySelector("[aria-invalid='true']");
-          if (firstInvalid) firstInvalid.focus();
-        }
       } catch (err) {
-        // Network/JSON trouble — fall back to a classic form submit, which
-        // the server handles fully on its own.
+        // The request never reached the server (offline, blocked) — nothing
+        // was saved, so a classic form submit is safe and may still work.
         HTMLFormElement.prototype.submit.call(form);
         return;
-      } finally {
-        submit.disabled = false;
-        submit.textContent = submitLabel;
       }
+
+      // From here on the server HAS received the request. Never resubmit:
+      // a 5xx or an HTML error page may still mean the message was saved,
+      // and a second POST would duplicate it.
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (err) {
+        data = null;
+      }
+      submit.disabled = false;
+      submit.textContent = submitLabel;
+
+      if (!data || typeof data.ok !== "boolean") {
+        setStatus(form.dataset.errorLabel, "error");
+        return;
+      }
+      if (data.ok) {
+        form.reset();
+        setStatus(data.message, "success");
+        return;
+      }
+      Object.entries(data.errors || {}).forEach(([name, msg]) => setFieldError(name, msg));
+      setStatus(data.message || form.dataset.errorLabel, "error");
+      const firstInvalid = form.querySelector("[aria-invalid='true']");
+      if (firstInvalid) firstInvalid.focus();
     });
   }
 
@@ -381,6 +436,7 @@
     initLangLinks();
     initScrollspy();
     initReveal();
+    initDiagram();
     initCopyEmail();
     initContactForm();
     initCommandPalette();

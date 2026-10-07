@@ -193,8 +193,14 @@ SITE_GITHUB_USERNAME = "ShohzoDev0108"
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", "")
 
-# Anti-spam: max contact-form submissions per IP per hour.
+# Anti-spam: max contact-form messages per sender per hour, plus a global cap
+# so a bot rotating IPs still can't flood the inbox / Telegram.
 CONTACT_RATE_LIMIT_PER_HOUR = int(env("CONTACT_RATE_LIMIT_PER_HOUR", "5"))
+CONTACT_GLOBAL_LIMIT_PER_HOUR = int(env("CONTACT_GLOBAL_LIMIT_PER_HOUR", "30"))
+# Only trust X-Real-IP / X-Forwarded-For when a proxy you control (nginx,
+# PythonAnywhere) sets them. Without a proxy, anyone can forge these headers
+# to dodge the per-sender limit — so the default is to use REMOTE_ADDR.
+CONTACT_TRUST_PROXY_HEADERS = env("CONTACT_TRUST_PROXY_HEADERS", "False") == "True"
 
 # ---------------------------------------------------------------------------
 # Production hardening (only active when DEBUG=False)

@@ -8,7 +8,6 @@ saved in the database, so we log and move on.
 
 import json
 import logging
-import urllib.error
 import urllib.request
 
 from django.conf import settings
@@ -58,6 +57,10 @@ def notify_new_message(msg):
             if body.get("ok"):
                 return True
             logger.warning("Telegram rejected contact notification: %s", body)
-    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-        logger.warning("Telegram contact notification failed: %s", exc)
+    except Exception:  # noqa: BLE001 — see module docstring
+        # Deliberately broad. Network failures surface as many types beyond
+        # URLError (ConnectionResetError, http.client.RemoteDisconnected,
+        # ssl.SSLError, ...). Letting any of them escape would turn an already
+        # saved message into a 500 — and the browser would then resubmit it.
+        logger.exception("Telegram contact notification failed")
     return False

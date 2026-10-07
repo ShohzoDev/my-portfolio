@@ -2,7 +2,6 @@ import json
 import re
 from unittest import mock
 
-from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -150,7 +149,7 @@ class IndexPageTests(TestCase):
 
     def test_project_tiers_render_in_their_sections(self):
         html = self.get("en")
-        self.assertIn('class="project-card featured', html)
+        self.assertIn('class="case reveal', html)
         self.assertIn('id="p-buildops"', html)
         other = html[html.index('class="other-list"'):]
         self.assertIn('id="p-english-bot"', other)
@@ -159,7 +158,7 @@ class IndexPageTests(TestCase):
     def test_badge_counts_only_live_projects(self):
         live = Project.objects.filter(is_active=True, status=Project.Status.LIVE).count()
         html = self.get("ru")
-        self.assertIn(f"<strong>{live}</strong>", html)
+        self.assertIn(f"{live} — {STRINGS['ru'][plural_key('ru', live)]}", html)
         self.assertIn(STRINGS["ru"][plural_key("ru", live)], html)
 
     def test_inactive_project_is_hidden(self):
@@ -179,6 +178,31 @@ class IndexPageTests(TestCase):
         current = [c for c in commands if c.get("current")]
         self.assertEqual([c["href"] for c in current], ["/en/"])
 
+    def test_redesign_sections_render(self):
+        for lang in SUPPORTED_LANGUAGES:
+            strings = STRINGS[lang]
+            html = self.get(lang)
+            self.assertIn('id="stack"', html)
+            self.assertNotIn("{#", html)  # no leaked template comments
+            self.assertNotIn("{%", html)
+            self.assertIn('class="diagram"', html)
+            self.assertIn('id="diagram-caption"', html)
+            self.assertIn(f"<em>{strings['hero_headline_em']}</em>", html)
+            for n in range(1, 5):
+                self.assertIn(strings[f"how{n}_t"].replace("'", "&#x27;"), html)
+            # every diagram node is keyboard-focusable and labelled, in both drawings
+            self.assertEqual(html.count('class="node'), 18)
+            self.assertEqual(html.count('tabindex="0"'), 18)
+
+    def test_nav_targets_exist(self):
+        html = self.get("en")
+        match = re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S)
+        for c in json.loads(match.group(1)):
+            if c["kind"] == "scroll":
+                self.assertIn(f'id="{c["target"][1:]}"', html, c["target"])
+        for href in re.findall(r'<a href="(#[a-z-]+)"', html):
+            self.assertIn(f'id="{href[1:]}"', html, href)
+
     def test_robots_and_sitemap(self):
         robots = self.client.get(reverse("portfolio:robots_txt")).content.decode()
         self.assertIn("Disallow: /admin/", robots)
@@ -192,9 +216,6 @@ class IndexPageTests(TestCase):
 @override_settings(STORAGES=_TEST_STORAGES, CONTACT_RATE_LIMIT_PER_HOUR=3)
 class ContactFormTests(TestCase):
     valid = {"name": "Ali", "contact": "@ali", "message": "Salom, loyiha bor."}
-
-    def setUp(self):
-        cache.clear()
 
     def post(self, data, lang="uz", ajax=False, **extra):
         headers = {"HTTP_X_REQUESTED_WITH": "fetch"} if ajax else {}
@@ -229,7 +250,7 @@ class ContactFormTests(TestCase):
         self.assertContains(response, 'value="Ali"', status_code=400)  # input kept
 
     def test_honeypot_is_silently_dropped(self):
-        response = self.post({**self.valid, "website": "http://spam.example"}, ajax=True)
+        response = self.post({**self.valid, "leave_empty": "http://spam.example"}, ajax=True)
         self.assertTrue(response.json()["ok"])
         self.assertFalse(ContactMessage.objects.exists())
 
@@ -240,11 +261,56 @@ class ContactFormTests(TestCase):
         self.assertEqual(blocked.status_code, 429)
         self.assertEqual(ContactMessage.objects.count(), 3)
 
-    def test_rate_limit_is_per_client_ip(self):
+    def test_autofill_named_fields_are_not_honeypots(self):
+        # Browsers autofill "website"/"url"; that must never drop a real message.
+        response = self.post({**self.valid, "website": "https://my.site"}, ajax=True)
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    @override_settings(CONTACT_TRUST_PROXY_HEADERS=True)
+    def test_rate_limit_is_per_client_ip_behind_proxy(self):
         for _ in range(3):
             self.post(self.valid, ajax=True, HTTP_X_REAL_IP="1.1.1.1")
+        self.assertEqual(self.post(self.valid, ajax=True, HTTP_X_REAL_IP="1.1.1.1").status_code, 429)
         other = self.post(self.valid, ajax=True, HTTP_X_REAL_IP="2.2.2.2")
         self.assertEqual(other.status_code, 200)
+
+    @override_settings(CONTACT_TRUST_PROXY_HEADERS=True)
+    def test_forwarded_for_uses_rightmost_entry(self):
+        # The client controls the left part of X-Forwarded-For; only the
+        # entry our own proxy appended (right-most) counts.
+        for i in range(3):
+            self.post(self.valid, ajax=True, HTTP_X_FORWARDED_FOR=f"9.9.9.{i}, 5.5.5.5")
+        blocked = self.post(self.valid, ajax=True, HTTP_X_FORWARDED_FOR="8.8.8.8, 5.5.5.5")
+        self.assertEqual(blocked.status_code, 429)
+
+    def test_spoofed_proxy_headers_ignored_by_default(self):
+        # Without a trusted proxy, rotating X-Real-IP must not bypass the limit.
+        for i in range(3):
+            self.post(self.valid, ajax=True, HTTP_X_REAL_IP=f"1.1.1.{i}")
+        blocked = self.post(self.valid, ajax=True, HTTP_X_REAL_IP="7.7.7.7")
+        self.assertEqual(blocked.status_code, 429)
+
+    @override_settings(CONTACT_RATE_LIMIT_PER_HOUR=100, CONTACT_GLOBAL_LIMIT_PER_HOUR=4)
+    def test_global_hourly_cap(self):
+        for i in range(4):
+            ContactMessage.objects.create(name="x", contact="x", message="x", ip_hash=f"h{i}")
+        self.assertEqual(self.post(self.valid, ajax=True).status_code, 429)
+
+    def test_old_messages_do_not_count(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from .views import _ip_hash
+        for _ in range(3):
+            ContactMessage.objects.create(name="x", contact="x", message="x", ip_hash=_ip_hash("127.0.0.1"))
+        ContactMessage.objects.update(created_at=timezone.now() - timedelta(hours=2))
+        self.assertEqual(self.post(self.valid, ajax=True).status_code, 200)
+
+    def test_ip_is_stored_only_as_hash(self):
+        self.post(self.valid, ajax=True)
+        msg = ContactMessage.objects.get()
+        self.assertEqual(len(msg.ip_hash), 64)
+        self.assertNotIn("127.0.0.1", msg.ip_hash)
 
     def test_get_not_allowed(self):
         self.assertEqual(self.client.get("/uz/contact/").status_code, 405)
@@ -273,6 +339,17 @@ class ContactFormTests(TestCase):
             response = self.post(self.valid, ajax=True)
         self.assertTrue(response.json()["ok"])
         self.assertFalse(ContactMessage.objects.get().telegram_sent)
+
+    @override_settings(TELEGRAM_BOT_TOKEN="123:abc", TELEGRAM_CHAT_ID="42")
+    def test_any_telegram_network_error_is_swallowed(self):
+        # Not only URLError: a reset connection must not 500 a saved message.
+        with mock.patch(
+            "portfolio.notifications.urllib.request.urlopen",
+            side_effect=ConnectionResetError("reset"),
+        ), self.assertLogs("portfolio.notifications", level="ERROR"):
+            response = self.post(self.valid, ajax=True)
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(ContactMessage.objects.count(), 1)
 
 
 class BlankEnvSettingsTests(TestCase):
