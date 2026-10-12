@@ -625,6 +625,41 @@ class CoverCompressionTests(TestCase):
         self.assertEqual(p.cover.name, name)
 
 
+class UzbekAlphabetTests(TestCase):
+    def test_converter(self):
+        from .uz_alphabet import to_new_latin as t
+
+        self.assertEqual(t("Bog'lanish uchun to'g'ridan-to'g'ri yozing"), "Boğlaniş uçun töğridan-töğri yozing")
+        self.assertEqual(t("Shunga o'xshash tizim kerakmi?"), "Şunga öxşaş tizim kerakmi?")
+        self.assertEqual(t("ta'lim va ma'lumot, tong"), "ta'lim va ma'lumot, tong")  # tutuq, ng stay
+        self.assertEqual(t("AI-yordamchi"), "AI-yordamçi")
+        for name in ("Oqqushlar", "oqqushlar.uz", "ShohzoDev", "Shohzod", "schema-per-tenant",
+                     "Health-check", "English", "Django'da"):
+            self.assertEqual(t(name), name)
+        once = t("O'zbekiston, Toshkent, qirg'iz")
+        self.assertEqual(once, "Özbekiston, Toşkent, qirğiz")
+        self.assertEqual(t(once), once)  # idempotent
+
+    @override_settings(STORAGES=_TEST_STORAGES)
+    def test_uzbek_pages_use_the_new_alphabet(self):
+        import html as html_lib
+
+        from .uz_alphabet import to_new_latin
+
+        for path in ("/uz/", "/uz/work/buildops/", "/uz/work/oqqushlar/", "/uz/work/zebest/"):
+            page = self.client.get(path).content.decode()
+            text = html_lib.unescape(re.sub(r"<script.*?</script>|<style.*?</style>|<[^>]+>", " ", page, flags=re.S))
+            for word in re.findall(r"[^\s«»\"()\[\],;:!?—–/|·]+", text):
+                # Anything the converter would still change is a leftover old spelling;
+                # names and technical words are protected by the converter itself.
+                self.assertEqual(to_new_latin(word), word, f"{path}: old spelling {word!r}")
+            self.assertIn("Özbekça", page)
+
+    @override_settings(STORAGES=_TEST_STORAGES)
+    def test_russian_and_english_are_untouched(self):
+        self.assertIn(STRINGS["en"]["case_task"], self.client.get("/en/work/buildops/").content.decode())
+        self.assertNotIn("ş", STRINGS["en"]["hero_tagline"] + STRINGS["ru"]["hero_tagline"])
+
 class BlankEnvSettingsTests(TestCase):
     """Regression: `KEY=` lines in .env (as in .env.example) are empty strings,
     not missing variables. They must fall back to defaults — an empty

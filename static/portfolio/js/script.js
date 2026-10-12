@@ -322,9 +322,14 @@
 
   /* ---------------------------------------------------- ⌘K command palette */
 
+  // Search matches both Uzbek spellings: "şaşlik" == "shashlik", "ö" == "o'".
   function normalize(text) {
     return text
       .toLowerCase()
+      .replace(/ş/g, "sh")
+      .replace(/ç/g, "ch")
+      .replace(/ğ/g, "g")
+      .replace(/ö/g, "o")
       .normalize("NFD")
       .replace(/[̀-ͯ]/g, "")
       .replace(/[ʻʼ'‘’`]/g, "");

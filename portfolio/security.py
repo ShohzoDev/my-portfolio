@@ -98,7 +98,7 @@ def throttled_admin_login(request, extra_context=None):
         ):
             logger.warning("Admin login throttled for ip_hash=%s…", hashed[:12])
             return HttpResponse(
-                "Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring. / "
+                "Juda köp uriniş. Birozdan söng qayta urinib köring. / "
                 "Too many attempts, try again later.",
                 status=429,
                 content_type="text/plain; charset=utf-8",
