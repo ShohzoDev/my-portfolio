@@ -115,35 +115,13 @@ class Project(models.Model):
 
 
 class SiteProfile(models.Model):
-    """
-    The owner's name and About text — one row, edited in the admin panel
-    (no code change needed to rewrite the About section).
-    """
+    """The owner's name — one row, edited in the admin panel."""
 
     full_name = models.CharField(
         "To'liq ism",
         max_length=120,
         default="Shohzod",
         help_text="Saytda, sarlavhada va Google uchun ma'lumotlarda shu ism ishlatiladi.",
-    )
-    about_uz = models.TextField("Men haqimda (UZ)", help_text="2–3 jumla. Bo'sh qator — yangi xatboshi.")
-    about_ru = models.TextField("Men haqimda (RU)")
-    about_en = models.TextField("Men haqimda (EN)")
-    now_uz = models.CharField(
-        "Hozir nima qilyapman (UZ)",
-        max_length=120,
-        blank=True,
-        help_text="Hero'dagi holat yozuvi. Bo'sh bo'lsa: «Yangi loyihalarga ochiqman».",
-    )
-    now_ru = models.CharField("Hozir nima qilyapman (RU)", max_length=120, blank=True)
-    now_en = models.CharField("Hozir nima qilyapman (EN)", max_length=120, blank=True)
-    now_project = models.ForeignKey(
-        "Project",
-        verbose_name="Holat yozuvi havolasi",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        help_text="Tanlansa, holat yozuvi shu loyihaning saytiga havola bo'ladi.",
     )
 
     class Meta:
@@ -155,12 +133,7 @@ class SiteProfile(models.Model):
 
     @classmethod
     def load(cls):
-        profile = cls.objects.first()
-        return profile or cls(full_name="Shohzod", about_uz="", about_ru="", about_en="")
-
-    def about_paragraphs(self, lang):
-        text = getattr(self, f"about_{lang}", "") or ""
-        return [" ".join(p.split()) for p in text.replace("\r\n", "\n").split("\n\n") if p.strip()]
+        return cls.objects.first() or cls(full_name="Shohzod")
 
 
 class LoginFailure(models.Model):
@@ -172,27 +145,3 @@ class LoginFailure(models.Model):
     class Meta:
         verbose_name = "Muvaffaqiyatsiz kirish"
         verbose_name_plural = "Muvaffaqiyatsiz kirishlar"
-
-
-class ContactMessage(models.Model):
-    """A message sent through the contact form on the site."""
-
-    name = models.CharField("Ism", max_length=120)
-    contact = models.CharField("Aloqa (email / Telegram / telefon)", max_length=200)
-    message = models.TextField("Xabar", max_length=4000)
-    lang = models.CharField("Til", max_length=2, blank=True)
-    # Salted hash of the sender's IP — enough to rate-limit per sender
-    # (works across all gunicorn workers, unlike an in-memory cache) without
-    # storing the raw IP address.
-    ip_hash = models.CharField(max_length=64, blank=True, db_index=True, editable=False)
-    created_at = models.DateTimeField("Yuborilgan", auto_now_add=True)
-    is_read = models.BooleanField("O'qildi", default=False)
-    telegram_sent = models.BooleanField("Telegramga yuborildi", default=False)
-
-    class Meta:
-        ordering = ["-created_at"]
-        verbose_name = "Xabar"
-        verbose_name_plural = "Xabarlar (aloqa formasi)"
-
-    def __str__(self):
-        return f"{self.name} — {self.created_at:%Y-%m-%d %H:%M}"

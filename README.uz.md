@@ -3,34 +3,31 @@
 [English README](README.md)
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
-`/uz/`, `/ru/`, `/en/`), "Blueprint" uslubida. Bosh sahifa qisqa — 4 bo'lim:
-hero (interaktiv arxitektura diagrammasi bilan), loyihalar, men haqimda,
-aloqa. Har bir loyihaning o'z sayti bor, shuning uchun portfolio ularni
-havolalar ro'yxati sifatida ko'rsatadi: nomi, bir qatorli tavsif va domeni.
-JavaScript o'chirilgan holatda ham to'liq ishlaydi.
+`/uz/`, `/ru/`, `/en/`). Bitta qisqa sahifa, 3 qism: kimman (rasm, sarlavha,
+stek, Telegram va ijtimoiy tarmoqlar), loyihalar, aloqa. Har bir loyihaning
+o'z sayti bor, shuning uchun portfolio ularni havolalar ro'yxati sifatida
+ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS —
+JavaScript yo'q.
 
 ## Tuzilishi
 
 ```
 config/                    — settings, urls
 portfolio/
-  models.py                — SiteProfile, SocialLink, Project, ContactMessage, LoginFailure
+  models.py                — SiteProfile, SocialLink, Project, LoginFailure
   admin.py                 — admin panel
-  content.py               — interfeys matnlari va ko'nikmalar (UZ/RU/EN)
-  views.py                 — bosh sahifa, til yo'naltirish, aloqa formasi, robots/sitemap
+  content.py               — interfeys matnlari (UZ/RU/EN) va stek qatori
+  views.py                 — bosh sahifa, til yo'naltirish, robots/sitemap
   security.py              — CSP sarlavhalari, admin login cheklovi, IP hash
-  forms.py                 — aloqa formasi (+ spam-tuzoq)
-  notifications.py         — yangi xabarni Telegramga yuborish
   tests.py                 — avtomatik testlar
-templates/portfolio/       — base.html, index.html + qismlar (_diagram, _socials)
-static/portfolio/          — css, js, rasmlar, o'z serverimizdagi shriftlar
+templates/portfolio/       — base.html, index.html, _socials.html
+static/portfolio/          — css, rasmlar, o'z serverimizdagi shriftlar
 ```
 
 ## Nimani qayerdan o'zgartirasiz
 
-- **Ism va "Men haqimda" matni** — admin panel → *Sayt profili*. 3 tilda,
-  bo'sh qator — yangi xatboshi. Ism sarlavhada, Google ma'lumotlarida va
-  sahifa nomida ishlatiladi.
+- **Ism** — admin panel → *Sayt profili*. Ism sahifada, sarlavhada va
+  Google ma'lumotlarida ishlatiladi.
 - **Loyihalar** — admin panel → *Loyihalar*. Har biri uchun: nomi, bir
   qatorli tavsif (3 tilda), sayt havolasi, holat va tartib. Butun qator
   saytga olib boradi, havola esa domen ko'rinishida chiqadi
@@ -38,9 +35,8 @@ static/portfolio/          — css, js, rasmlar, o'z serverimizdagi shriftlar
   nom yonida yoziladi; «Men asoschiman» belgilansa — «Asoschi» belgisi.
 - **Ijtimoiy tarmoqlar** — admin panel → *Ijtimoiy tarmoqlar*. Faqat URL
   kiritilganlari saytda ko'rinadi. **Telegram** URL'i kiritilsa, u
-  saytdagi asosiy "Telegram orqali yozish" tugmasiga aylanadi.
-- **Xabarlar** — admin panel → *Xabarlar (aloqa formasi)*.
-- **Interfeys matnlari** — `portfolio/content.py` (`STRINGS`). Uchala
+  saytdagi asosiy "Telegram'da yozing" tugmasiga aylanadi.
+- **Matnlar va stek qatori** — `portfolio/content.py` (`STRINGS`, `STACK`). Uchala
   tilda kalitlar bir xil bo'lishi shart — testlar buni tekshiradi.
 
 ## Mahalliy ishga tushirish (PowerShell)
@@ -69,33 +65,6 @@ Testlar:
 python manage.py test
 ```
 
-## Aloqa formasi → Telegram (ixtiyoriy)
-
-Sozlanmasa ham forma ishlaydi: xabarlar admin panelda saqlanadi.
-Telegramga ham kelishi uchun:
-
-1. @BotFather'da bot yarating va tokenni oling.
-2. Botga bitta xabar yozing, so'ng o'zingizning chat ID'ingizni
-   @userinfobot orqali bilib oling.
-3. `.env` ga qo'shing:
-   ```
-   TELEGRAM_BOT_TOKEN=123456:ABC...
-   TELEGRAM_CHAT_ID=123456789
-   ```
-
-Spamdan himoya:
-
-- ko'rinmas "tuzoq" maydon (`leave_empty` — botlar to'ldiradi, odamlar
-  ko'rmaydi; brauzer avtomatik to'ldiradigan nom emas);
-- bir IP'dan soatiga 5 tagacha xabar (`CONTACT_RATE_LIMIT_PER_HOUR`) va
-  butun sayt bo'yicha soatiga 30 tagacha (`CONTACT_GLOBAL_LIMIT_PER_HOUR`).
-  Hisob bazada yuritiladi — bir nechta gunicorn worker'da ham, qayta
-  ishga tushirishdan keyin ham ishlaydi. IP o'zi saqlanmaydi, faqat
-  SECRET_KEY bilan olingan hash'i.
-- `CONTACT_TRUST_PROXY_HEADERS=True` faqat sayt nginx yoki PythonAnywhere
-  orqasida turganda yoqiladi (ular `X-Real-IP` ni o'zi qo'yadi). Proksisiz
-  yoqilsa, har kim sarlavhani soxtalashtirib limitni aylanib o'tadi.
-
 ## Xavfsizlik
 
 - **Admin manzili**: `.env` da `DJANGO_ADMIN_URL=boshqaruv-7f3k/` kabi
@@ -103,9 +72,12 @@ Spamdan himoya:
 - **Admin login cheklovi**: bir IP'dan 15 daqiqada 5 ta xato urinishdan
   keyin login vaqtincha bloklanadi (`ADMIN_LOGIN_MAX_FAILURES`,
   `ADMIN_LOGIN_WINDOW_MINUTES`).
-- **Content-Security-Policy**: sayt faqat o'z serveridagi skript, stil,
-  shrift va rasmlarni yuklaydi; yagona inline skript hash orqali
-  ruxsat etilgan. Admin panelga CSP qo'yilmaydi.
+- **Content-Security-Policy**: sayt faqat o'z serveridagi stil, shrift va
+  rasmlarni yuklaydi; JavaScript umuman yo'q (`script-src 'none'`). Admin
+  panelga CSP qo'yilmaydi.
+- **Proksi**: `CONTACT_TRUST_PROXY_HEADERS=True` faqat sayt nginx yoki
+  PythonAnywhere orqasida turganda yoqiladi — shunda admin login cheklovi
+  haqiqiy IP'ni ko'radi. Proksisiz yoqilsa, IP'ni soxtalashtirish mumkin.
 - **Loglar**: xatolar stderr'ga yoziladi — serverda `journalctl -u gunicorn`,
   PythonAnywhere'da *Error log*.
 - **Email**: `SITE_CONTACT_EMAIL` o'rnatilmasa, saytda email bloki
@@ -121,14 +93,12 @@ Spamdan himoya:
    ```
 2. `DJANGO_ALLOWED_HOSTS` va `DJANGO_CSRF_TRUSTED_ORIGINS=https://domeningiz.uz`.
 3. `python manage.py collectstatic --noinput` — albatta (WhiteNoise manifest).
-4. `/media/` (yuklangan muqova rasmlari) server tomonidan xizmat qilinishi
-   kerak — pastga qarang.
 
 ## PythonAnywhere
 
 1. Kodni clone qiling, virtualenv yarating, `pip install -r requirements.txt`.
 2. Web tab → Manual configuration → WSGI faylda `config.wsgi.application`.
-3. Static files: `/static/` → `.../staticfiles`, `/media/` → `.../media`.
+3. Static files: `/static/` → `.../staticfiles`.
 4. Environment: `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY=...`,
    `DJANGO_ALLOWED_HOSTS=<username>.pythonanywhere.com`,
    `CONTACT_TRUST_PROXY_HEADERS=True`.
@@ -148,9 +118,8 @@ venv/bin/python manage.py collectstatic --noinput
 sudo systemctl restart gunicorn
 ```
 
-nginx: `location /static/` → `staticfiles/`, `location /media/` → `media/`.
-Aloqa formasidagi IP-limit to'g'ri ishlashi uchun nginx haqiqiy IP'ni
-uzatishi kerak:
+nginx: `location /static/` → `staticfiles/`. Admin login cheklovi to'g'ri
+ishlashi uchun nginx haqiqiy IP'ni uzatishi kerak:
 
 ```
 proxy_set_header X-Real-IP $remote_addr;

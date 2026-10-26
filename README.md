@@ -3,8 +3,8 @@
 [![tests](https://github.com/ShohzoDev/my-portfolio/actions/workflows/tests.yml/badge.svg)](https://github.com/ShohzoDev/my-portfolio/actions/workflows/tests.yml)
 
 Personal portfolio of a Django backend engineer, built with Django 5.2.
-Server-rendered, trilingual (Uzbek / Russian / English) and fully usable
-with JavaScript turned off.
+Server-rendered, trilingual (Uzbek / Russian / English), plain HTML and CSS
+with no JavaScript at all.
 
 [O'zbekcha qo'llanma → README.uz.md](README.uz.md)
 
@@ -12,40 +12,30 @@ with JavaScript turned off.
 
 ## What's inside
 
-- **One short page.** Four sections: hero, projects, about, contact. Every
-  project already has its own live site, so the portfolio lists them as a
-  directory of links (name, one line, domain) instead of re-describing them.
-- **Interactive architecture diagram** in the hero, drawn as inline SVG.
-  Hover or arrow-key through the nodes to see what each component does.
-  The diagram is a single Tab stop with roving focus, and phones get a
-  separate vertical drawing.
+- **One short page, three parts:** who I am (photo, headline, stack,
+  Telegram and social links), projects, contact. About two phone screens
+  long.
+- **Projects as a directory of links.** Every project already has its own
+  live site, so each row is just the name, one line and the domain, and
+  the whole row opens the site.
 - **One URL per language** (`/uz/`, `/ru/`, `/en/`) with `hreflang`,
   canonical links, a sitemap and JSON-LD (`Person`).
-- **Everything editable in the admin:** owner name and About text
-  (`SiteProfile`), projects (name, one-line description, link) in three
-  languages, and social links. Social links without a URL stay hidden.
-- **Contact form:**
-  - works without JS, with an AJAX upgrade when JS is available;
-  - honeypot plus per-IP and global hourly limits, counted in the
-    database so they hold across gunicorn workers;
-  - IPs are stored only as salted hashes;
-  - optional Telegram notification.
+- **Editable in the admin:** owner name, projects (name, one-line
+  description, link, status) in three languages, and social links. Social
+  links without a URL stay hidden; the Telegram link becomes the main
+  button.
 - **Security:**
-  - strict Content-Security-Policy (the one inline script is allowed by
-    its SHA-256 hash) and a Permissions-Policy;
+  - strict Content-Security-Policy (`script-src 'none'`: the page runs no
+    scripts) and a Permissions-Policy;
   - admin login throttling and a configurable admin path;
   - production hardening (HSTS, secure cookies, SSL redirect);
   - errors are logged to stderr.
-- **Performance:**
-  - self-hosted variable fonts (IBM Plex) with only the needed unicode
-    subsets;
-  - AVIF/WebP photos and WhiteNoise compressed, hashed static files;
-  - Lighthouse (production mode): 99–100 performance and 100 for
-    accessibility, best practices and SEO.
+- **Performance:** self-hosted IBM Plex fonts with only the needed unicode
+  subsets, AVIF/WebP photo, WhiteNoise compressed and hashed static files.
 
 ## Stack
 
-Python · Django 5.2 · SQLite or PostgreSQL · WhiteNoise · vanilla JS · hand-written CSS
+Python · Django 5.2 · SQLite or PostgreSQL · WhiteNoise · hand-written CSS
 
 ## Run locally
 
@@ -73,10 +63,8 @@ The suite covers:
 
 - routing and language detection;
 - SEO output (hreflang, canonical, JSON-LD, sitemap);
-- the project list and the content migrations;
-- the contact form: validation, honeypot, rate limits and proxy-header
-  spoofing;
-- CSP and inline-script hash consistency;
+- the one-page layout, the project list and the content migrations;
+- CSP (no executable scripts on the page);
 - admin login throttling.
 
 GitHub Actions runs it on every push.
@@ -92,8 +80,7 @@ All settings come from environment variables (`.env` in development). See
 | `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` | your domain |
 | `DJANGO_ADMIN_URL` | non-default admin path, e.g. `manage-7f3k/` |
 | `SITE_CONTACT_EMAIL` | shown on the site; the e-mail block stays hidden until it is set |
-| `CONTACT_TRUST_PROXY_HEADERS=True` | only behind nginx / PythonAnywhere, so the real client IP is used |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | optional contact-form notifications |
+| `CONTACT_TRUST_PROXY_HEADERS=True` | only behind nginx / PythonAnywhere, so the admin login limit sees the real client IP |
 
 Deployment notes for PythonAnywhere and an nginx + gunicorn VPS are in
 [README.uz.md](README.uz.md).

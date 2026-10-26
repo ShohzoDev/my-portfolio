@@ -1,12 +1,11 @@
 import json
 import re
-from unittest import mock
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .content import STRINGS, SUPPORTED_LANGUAGES, localized_skills, plural_key
-from .models import ContactMessage, LoginFailure, Project, SiteProfile, SocialLink
+from .content import STACK, STRINGS, SUPPORTED_LANGUAGES
+from .models import LoginFailure, Project, SiteProfile, SocialLink
 
 # The index template uses {% static %}, and production uses WhiteNoise's
 # manifest storage (hashed filenames, requires `collectstatic`). Django's test
@@ -91,17 +90,10 @@ class ContentTests(TestCase):
         for lang in SUPPORTED_LANGUAGES:
             self.assertEqual(set(STRINGS[lang]), keys, lang)
 
-    def test_localized_skills(self):
-        self.assertIn("Backend", [s["title"] for s in localized_skills("ru")])
-
-    def test_russian_plural(self):
-        self.assertEqual(plural_key("ru", 1), "badge_label_one")
-        self.assertEqual(plural_key("ru", 4), "badge_label_few")
-        self.assertEqual(plural_key("ru", 5), "badge_label_many")
-        self.assertEqual(plural_key("ru", 11), "badge_label_many")
-        self.assertEqual(plural_key("ru", 22), "badge_label_few")
-        self.assertEqual(plural_key("en", 1), "badge_label_one")
-        self.assertEqual(plural_key("en", 4), "badge_label_many")
+    def test_every_label_is_filled(self):
+        for lang in SUPPORTED_LANGUAGES:
+            for key, value in STRINGS[lang].items():
+                self.assertTrue(value.strip(), f"{lang}.{key}")
 
 
 @override_settings(STORAGES=_TEST_STORAGES)
@@ -163,18 +155,29 @@ class IndexPageTests(TestCase):
         data = json.loads(match.group(1))
         self.assertEqual(data["@type"], "Person")
         self.assertEqual(data["jobTitle"], STRINGS["en"]["hero_role"])
+        self.assertEqual(data["knowsAbout"], STACK)
         self.assertIn("https://github.com/ShohzoDev", data["sameAs"])
         self.assertIn("https://t.me/ShohzoDev", data["sameAs"])
 
-    def test_content_is_server_rendered(self):
-        html = self.get()
-        self.assertIn("BuildBest", html)
-        self.assertNotIn("BuildOps", html)
-        self.assertIn("Django backend muhandisiman", html)  # About text from SiteProfile
+    def test_one_short_page_three_parts(self):
+        for lang in SUPPORTED_LANGUAGES:
+            strings = STRINGS[lang]
+            html = self.get(lang)
+            self.assertEqual(re.findall(r'<section class="([a-z ]+)"', html), ["intro", "block", "block contact"])
+            self.assertIn(f"<em>{strings['hero_headline_em']}</em>", html)
+            self.assertIn(strings["hero_tagline"].replace("'", "&#x27;"), html)
+            self.assertIn(strings["contact_title"], html)
+            for tool in STACK:
+                self.assertIn(f"<li>{tool}</li>", html)
+            self.assertNotIn("{#", html)  # no leaked template syntax
+            self.assertNotIn("{%", html)
+            # gone with the redesign
+            for gone in ('class="diagram', 'id="about"', "<form", "cmdk", "script.js"):
+                self.assertNotIn(gone, html)
 
     def test_projects_are_rows_linking_to_their_sites(self):
         html = self.get("en")
-        section = html[html.index('id="projects"'):html.index('id="about"')]
+        section = html[html.index('id="projects"'):html.index('id="contact"')]
         rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="proj-row" href="([^"]+)" target="_blank" rel="noopener">', section)
         self.assertEqual(
             rows,
@@ -189,7 +192,7 @@ class IndexPageTests(TestCase):
         for domain in ("zebest.uz", "buildbest.uz", "oqqushlar.uz", "geodezistman.uz"):
             self.assertIn(f"<span>{domain}</span>", section)
         self.assertNotIn("https://", re.sub(r'href="[^"]+"', "", section))  # domains shown bare
-        self.assertNotIn("/work/", html)  # no case-study pages any more
+        self.assertNotIn("BuildOps", html)
         self.assertNotIn("p-geo-portfolio", html)
         self.assertNotIn("p-lingvoapp", html)
 
@@ -202,16 +205,17 @@ class IndexPageTests(TestCase):
         self.assertIn(STRINGS["en"]["status_dev"], row)  # non-live status is spelled out
         self.assertNotIn("href=", row)
 
-    def test_badge_counts_only_live_projects(self):
-        live = Project.objects.filter(is_active=True, status=Project.Status.LIVE).count()
-        html = self.get("ru")
-        self.assertIn(f"{live} — {STRINGS['ru'][plural_key('ru', live)]}", html)
-        self.assertEqual(live, 5)
-        self.assertIn(STRINGS["ru"][plural_key("ru", live)], html)
-
     def test_inactive_project_is_hidden(self):
         Project.objects.filter(slug="roma-food").update(is_active=False)
         self.assertNotIn('id="p-roma-food"', self.get())
+
+    def test_zebest_founder_badge(self):
+        for lang in SUPPORTED_LANGUAGES:
+            html = self.get(lang)
+            row = html[html.index('id="p-zebest"'):]
+            self.assertIn(STRINGS[lang]["founder_label"], row[:row.index("</li>")])
+        row = html[html.index('id="p-buildbest"'):]
+        self.assertNotIn("founder-tag", row[:row.index("</li>")])
 
     def test_only_linked_social_icons_are_shown(self):
         html = self.get()
@@ -220,19 +224,17 @@ class IndexPageTests(TestCase):
                     "https://www.facebook.com/ShohzoDev"):
             self.assertIn(f'href="{url}"', html)
         self.assertNotIn("ShohzoDev0108", html)
+        self.assertIn('<meta name="twitter:creator" content="@ShohzoDev">', html)
         SocialLink.objects.create(platform="linkedin", url="")  # no URL yet
         self.assertNotIn('title="LinkedIn"', self.get())
         SocialLink.objects.filter(platform="linkedin").update(url="https://linkedin.com/in/someone")
         self.assertIn('title="LinkedIn"', self.get())
-        self.assertIn('<meta name="twitter:creator" content="@ShohzoDev">', html)
 
-    def test_telegram_link_becomes_the_main_contact_button(self):
+    def test_telegram_is_the_main_button(self):
+        html = self.get("en")
+        self.assertEqual(html.count('class="btn btn-primary" href="https://t.me/ShohzoDev"'), 2)  # intro + contact
         SocialLink.objects.filter(platform="telegram").update(url="")
         self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
-        SocialLink.objects.filter(platform="telegram").update(url="https://t.me/someone")
-        html = self.get("en")
-        self.assertEqual(html.count('href="https://t.me/someone" class="btn'), 1)  # hero
-        self.assertIn('class="btn btn-primary" href="https://t.me/someone"', html)  # contact
 
     @override_settings(SITE_CONTACT_EMAIL="contact@example.com")
     def test_placeholder_email_is_never_shown(self):
@@ -242,69 +244,20 @@ class IndexPageTests(TestCase):
 
     @override_settings(SITE_CONTACT_EMAIL="hello@real.uz")
     def test_real_email_is_shown(self):
-        self.assertIn('href="mailto:hello@real.uz"', self.get("en"))
+        self.assertIn('<a class="email" href="mailto:hello@real.uz">hello@real.uz</a>', self.get("en"))
 
-    def test_profile_name_and_about_come_from_admin(self):
-        SiteProfile.objects.update(full_name="Shohzod Testov", about_en="First para.\n\nSecond para.")
+    def test_profile_name_comes_from_admin(self):
+        SiteProfile.objects.update(full_name="Shohzod Testov")
         html = self.get("en")
         self.assertIn("<title>Shohzod Testov — Django Backend Engineer</title>", html)
-        self.assertIn('<p class="lead">First para.</p><p>Second para.</p>', html)
+        self.assertIn('<p class="me-name">Shohzod Testov</p>', html)
         data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
         self.assertEqual(data["name"], "Shohzod Testov")
 
-    @override_settings(SITE_CONTACT_EMAIL="hello@real.uz")
-    def test_command_palette_data(self):
+    def test_in_page_links_have_targets(self):
         html = self.get("en")
-        match = re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S)
-        commands = json.loads(match.group(1))
-        kinds = {c["kind"] for c in commands}
-        self.assertEqual(kinds, {"scroll", "href", "copy"})
-        current = [c for c in commands if c.get("current")]
-        self.assertEqual([c["href"] for c in current], ["/en/"])
-        projects = [c for c in commands if c["group"] == STRINGS["en"]["cmdk_group_projects"]]
-        self.assertEqual(projects[0], {"group": STRINGS["en"]["cmdk_group_projects"], "label": "Zebest",
-                                       "kind": "href", "href": "https://zebest.uz", "external": True})
-        self.assertEqual(len(projects), 5)
-
-    def test_redesign_sections_render(self):
-        for lang in SUPPORTED_LANGUAGES:
-            strings = STRINGS[lang]
-            html = self.get(lang)
-            self.assertIn('id="stack"', html)
-            self.assertNotIn("{#", html)  # no leaked template comments
-            self.assertNotIn("{%", html)
-            self.assertIn('class="diagram"', html)
-            self.assertIn('id="diagram-caption"', html)
-            self.assertIn(f"<em>{strings['hero_headline_em']}</em>", html)
-            for n in range(1, 5):
-                self.assertIn(strings[f"how{n}_t"].replace("'", "&#x27;"), html)
-            # every diagram node is keyboard-focusable and labelled, in both drawings
-            self.assertEqual(html.count('class="node'), 18)
-            self.assertEqual(html.count('tabindex="0"'), 18)
-
-    def test_nav_targets_exist(self):
-        html = self.get("en")
-        match = re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S)
-        for c in json.loads(match.group(1)):
-            if c["kind"] == "scroll":
-                self.assertIn(f'id="{c["target"][1:]}"', html, c["target"])
-        for href in re.findall(r'<a href="(#[a-z-]+)"', html):
-            self.assertIn(f'id="{href[1:]}"', html, href)
-
-    def test_zebest_founder_and_now_status(self):
-        for lang in SUPPORTED_LANGUAGES:
-            html = self.get(lang)
-            row = html[html.index('id="p-zebest"'):]
-            self.assertIn(STRINGS[lang]["founder_label"], row[:row.index("</li>")])
-            self.assertIn('<a class="status-pill" href="https://zebest.uz">', html)
-        row = html[html.index('id="p-buildbest"'):]
-        self.assertNotIn("founder-tag", row[:row.index("</li>")])
-        self.assertIn("Now: building Zebest", self.get("en"))
-
-    def test_now_status_falls_back_when_empty(self):
-        SiteProfile.objects.update(now_uz="", now_project=None)
-        html = self.get("uz")
-        self.assertIn(f'<p class="status-pill"><span class="dot" aria-hidden="true"></span>{STRINGS["uz"]["fact_status_value"]}</p>', html)
+        for href in re.findall(r'href="#([a-z-]+)"', html):
+            self.assertIn(f'id="{href}"', html, href)
 
     def test_robots_and_sitemap(self):
         robots = self.client.get(reverse("portfolio:robots_txt")).content.decode()
@@ -317,149 +270,11 @@ class IndexPageTests(TestCase):
         self.assertEqual(sitemap.count("<loc>"), 3)
 
 
-@override_settings(STORAGES=_TEST_STORAGES, CONTACT_RATE_LIMIT_PER_HOUR=3)
-class ContactFormTests(TestCase):
-    valid = {"name": "Ali", "contact": "@ali", "message": "Salom, loyiha bor."}
-
-    def post(self, data, lang="uz", ajax=False, **extra):
-        headers = {"HTTP_X_REQUESTED_WITH": "fetch"} if ajax else {}
-        return self.client.post(f"/{lang}/contact/", data, **headers, **extra)
-
-    def test_valid_submission_saves_and_redirects(self):
-        response = self.post(self.valid)
-        self.assertRedirects(response, "/uz/?sent=1#contact", fetch_redirect_response=False)
-        msg = ContactMessage.objects.get()
-        self.assertEqual((msg.name, msg.lang, msg.telegram_sent), ("Ali", "uz", False))
-
-    def test_success_message_shown_after_redirect(self):
-        response = self.client.get("/uz/?sent=1")
-        self.assertContains(response, STRINGS["uz"]["form_success"].replace("'", "&#x27;"))
-
-    def test_ajax_valid(self):
-        response = self.post(self.valid, lang="en", ajax=True)
-        self.assertEqual(response.json(), {"ok": True, "message": STRINGS["en"]["form_success"]})
-
-    def test_ajax_invalid_returns_translated_field_errors(self):
-        response = self.post({"name": "", "contact": "", "message": ""}, lang="ru", ajax=True)
-        self.assertEqual(response.status_code, 400)
-        errors = response.json()["errors"]
-        self.assertEqual(set(errors), {"name", "contact", "message"})
-        self.assertEqual(errors["name"], STRINGS["ru"]["err_required"])
-        self.assertFalse(ContactMessage.objects.exists())
-
-    def test_invalid_without_js_rerenders_with_errors(self):
-        response = self.post({"name": "Ali", "contact": "", "message": "hi"})
-        self.assertEqual(response.status_code, 400)
-        self.assertContains(response, 'aria-invalid="true"', status_code=400)
-        self.assertContains(response, 'value="Ali"', status_code=400)  # input kept
-
-    def test_honeypot_is_silently_dropped(self):
-        response = self.post({**self.valid, "leave_empty": "http://spam.example"}, ajax=True)
-        self.assertTrue(response.json()["ok"])
-        self.assertFalse(ContactMessage.objects.exists())
-
-    def test_rate_limit(self):
-        for _ in range(3):
-            self.assertEqual(self.post(self.valid, ajax=True).status_code, 200)
-        blocked = self.post(self.valid, ajax=True)
-        self.assertEqual(blocked.status_code, 429)
-        self.assertEqual(ContactMessage.objects.count(), 3)
-
-    def test_autofill_named_fields_are_not_honeypots(self):
-        # Browsers autofill "website"/"url"; that must never drop a real message.
-        response = self.post({**self.valid, "website": "https://my.site"}, ajax=True)
-        self.assertTrue(response.json()["ok"])
-        self.assertEqual(ContactMessage.objects.count(), 1)
-
-    @override_settings(CONTACT_TRUST_PROXY_HEADERS=True)
-    def test_rate_limit_is_per_client_ip_behind_proxy(self):
-        for _ in range(3):
-            self.post(self.valid, ajax=True, HTTP_X_REAL_IP="1.1.1.1")
-        self.assertEqual(self.post(self.valid, ajax=True, HTTP_X_REAL_IP="1.1.1.1").status_code, 429)
-        other = self.post(self.valid, ajax=True, HTTP_X_REAL_IP="2.2.2.2")
-        self.assertEqual(other.status_code, 200)
-
-    @override_settings(CONTACT_TRUST_PROXY_HEADERS=True)
-    def test_forwarded_for_uses_rightmost_entry(self):
-        # The client controls the left part of X-Forwarded-For; only the
-        # entry our own proxy appended (right-most) counts.
-        for i in range(3):
-            self.post(self.valid, ajax=True, HTTP_X_FORWARDED_FOR=f"9.9.9.{i}, 5.5.5.5")
-        blocked = self.post(self.valid, ajax=True, HTTP_X_FORWARDED_FOR="8.8.8.8, 5.5.5.5")
-        self.assertEqual(blocked.status_code, 429)
-
-    def test_spoofed_proxy_headers_ignored_by_default(self):
-        # Without a trusted proxy, rotating X-Real-IP must not bypass the limit.
-        for i in range(3):
-            self.post(self.valid, ajax=True, HTTP_X_REAL_IP=f"1.1.1.{i}")
-        blocked = self.post(self.valid, ajax=True, HTTP_X_REAL_IP="7.7.7.7")
-        self.assertEqual(blocked.status_code, 429)
-
-    @override_settings(CONTACT_RATE_LIMIT_PER_HOUR=100, CONTACT_GLOBAL_LIMIT_PER_HOUR=4)
-    def test_global_hourly_cap(self):
-        for i in range(4):
-            ContactMessage.objects.create(name="x", contact="x", message="x", ip_hash=f"h{i}")
-        self.assertEqual(self.post(self.valid, ajax=True).status_code, 429)
-
-    def test_old_messages_do_not_count(self):
-        from datetime import timedelta
-        from django.utils import timezone
-        from .security import ip_hash as _ip_hash
-        for _ in range(3):
-            ContactMessage.objects.create(name="x", contact="x", message="x", ip_hash=_ip_hash("127.0.0.1"))
-        ContactMessage.objects.update(created_at=timezone.now() - timedelta(hours=2))
-        self.assertEqual(self.post(self.valid, ajax=True).status_code, 200)
-
-    def test_ip_is_stored_only_as_hash(self):
-        self.post(self.valid, ajax=True)
-        msg = ContactMessage.objects.get()
-        self.assertEqual(len(msg.ip_hash), 64)
-        self.assertNotIn("127.0.0.1", msg.ip_hash)
-
-    def test_get_not_allowed(self):
-        self.assertEqual(self.client.get("/uz/contact/").status_code, 405)
-
-    @override_settings(TELEGRAM_BOT_TOKEN="123:abc", TELEGRAM_CHAT_ID="42")
-    def test_telegram_notification_sent_when_configured(self):
-        fake = mock.MagicMock()
-        fake.__enter__.return_value.read.return_value = b'{"ok": true}'
-        with mock.patch("portfolio.notifications.urllib.request.urlopen", return_value=fake) as urlopen:
-            self.post({**self.valid, "message": "<b>hi</b> & bye"}, ajax=True)
-        request = urlopen.call_args[0][0]
-        payload = json.loads(request.data)
-        self.assertEqual(payload["chat_id"], "42")
-        self.assertIn("&lt;b&gt;hi&lt;/b&gt; &amp; bye", payload["text"])  # user text escaped
-        self.assertIn("bot123:abc", request.full_url)
-        self.assertTrue(ContactMessage.objects.get().telegram_sent)
-
-    @override_settings(TELEGRAM_BOT_TOKEN="123:abc", TELEGRAM_CHAT_ID="42")
-    def test_telegram_failure_does_not_break_form(self):
-        import urllib.error
-
-        with mock.patch(
-            "portfolio.notifications.urllib.request.urlopen",
-            side_effect=urllib.error.URLError("down"),
-        ), self.assertLogs("portfolio.notifications", level="ERROR"):
-            response = self.post(self.valid, ajax=True)
-        self.assertTrue(response.json()["ok"])
-        self.assertFalse(ContactMessage.objects.get().telegram_sent)
-
-    @override_settings(TELEGRAM_BOT_TOKEN="123:abc", TELEGRAM_CHAT_ID="42")
-    def test_any_telegram_network_error_is_swallowed(self):
-        # Not only URLError: a reset connection must not 500 a saved message.
-        with mock.patch(
-            "portfolio.notifications.urllib.request.urlopen",
-            side_effect=ConnectionResetError("reset"),
-        ), self.assertLogs("portfolio.notifications", level="ERROR"):
-            response = self.post(self.valid, ajax=True)
-        self.assertTrue(response.json()["ok"])
-        self.assertEqual(ContactMessage.objects.count(), 1)
-
-
 @override_settings(STORAGES=_TEST_STORAGES)
 class ErrorPageTests(TestCase):
-    def test_old_case_study_urls_are_gone(self):
-        self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)
+    def test_removed_pages_are_gone(self):
+        self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)  # old case studies
+        self.assertEqual(self.client.post("/uz/contact/").status_code, 404)  # old contact form
 
     @override_settings(DEBUG=False)
     def test_error_pages_have_no_inline_styles(self):
@@ -473,18 +288,18 @@ class ErrorPageTests(TestCase):
 
 @override_settings(STORAGES=_TEST_STORAGES)
 class SecurityTests(TestCase):
-    def test_csp_header_and_inline_script_hash_match(self):
-        from .security import CONTENT_SECURITY_POLICY, JS_FLAG_HASH, JS_FLAG_SCRIPT
+    def test_csp_header_and_no_executable_scripts(self):
+        from .security import CONTENT_SECURITY_POLICY
 
         response = self.client.get("/en/")
-        self.assertEqual(response["Content-Security-Policy"], CONTENT_SECURITY_POLICY)
-        self.assertIn(JS_FLAG_HASH, response["Content-Security-Policy"])
-        self.assertIn("frame-ancestors 'none'", response["Content-Security-Policy"])
+        csp = response["Content-Security-Policy"]
+        self.assertEqual(csp, CONTENT_SECURITY_POLICY)
+        self.assertIn("script-src 'none'", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
         self.assertIn("camera=()", response["Permissions-Policy"])
-        # The only inline <script> must be byte-identical to the hashed one.
         html = response.content.decode()
-        inline = re.findall(r"<script>(.*?)</script>", html, re.S)
-        self.assertEqual(inline, [JS_FLAG_SCRIPT])
+        # The only <script> is JSON-LD data, which never executes.
+        self.assertEqual(re.findall(r"<script([^>]*)>", html), [' type="application/ld+json"'])
         self.assertNotIn(" style=", html)  # style-src 'self' forbids inline styles
 
     def test_admin_is_left_without_csp(self):
@@ -560,7 +375,7 @@ class UzbekAlphabetTests(TestCase):
 
     @override_settings(STORAGES=_TEST_STORAGES)
     def test_russian_and_english_are_untouched(self):
-        self.assertIn(STRINGS["en"]["projects_lead"], self.client.get("/en/").content.decode())
+        self.assertIn(STRINGS["en"]["contact_title"], self.client.get("/en/").content.decode())
         self.assertNotIn("ş", STRINGS["en"]["hero_tagline"] + STRINGS["ru"]["hero_tagline"])
 
 class BlankEnvSettingsTests(TestCase):
@@ -580,14 +395,13 @@ class BlankEnvSettingsTests(TestCase):
             "DJANGO_DEBUG": "",
             "DJANGO_ALLOWED_HOSTS": "",
             "SITE_CONTACT_EMAIL": "",
-            "CONTACT_RATE_LIMIT_PER_HOUR": "",
-            "TELEGRAM_BOT_TOKEN": "",
+            "ADMIN_LOGIN_MAX_FAILURES": "",
         }
         code = (
             "import json, django; django.setup();"
             "from django.conf import settings as s;"
             "print(json.dumps([s.SECRET_KEY, s.DEBUG, s.ALLOWED_HOSTS,"
-            " s.SITE_CONTACT_EMAIL, s.CONTACT_RATE_LIMIT_PER_HOUR]))"
+            " s.SITE_CONTACT_EMAIL, s.ADMIN_LOGIN_MAX_FAILURES]))"
         )
         result = subprocess.run(
             [sys.executable, "-c", code],

@@ -192,20 +192,9 @@ SITE_GITHUB_USERNAME = "ShohzoDev"
 # The same handle on Telegram, Instagram and X (used for twitter:creator).
 SITE_SOCIAL_HANDLE = "ShohzoDev"
 
-# Contact form → Telegram. Optional: if either value is empty, messages are
-# still saved and visible in the admin panel, just not pushed to Telegram.
-#   TELEGRAM_BOT_TOKEN — from @BotFather
-#   TELEGRAM_CHAT_ID   — your own chat id (e.g. from @userinfobot)
-TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = env("TELEGRAM_CHAT_ID", "")
-
-# Anti-spam: max contact-form messages per sender per hour, plus a global cap
-# so a bot rotating IPs still can't flood the inbox / Telegram.
-CONTACT_RATE_LIMIT_PER_HOUR = int(env("CONTACT_RATE_LIMIT_PER_HOUR", "5"))
-CONTACT_GLOBAL_LIMIT_PER_HOUR = int(env("CONTACT_GLOBAL_LIMIT_PER_HOUR", "30"))
 # Only trust X-Real-IP / X-Forwarded-For when a proxy you control (nginx,
 # PythonAnywhere) sets them. Without a proxy, anyone can forge these headers
-# to dodge the per-sender limit — so the default is to use REMOTE_ADDR.
+# to dodge the per-client admin login limit — so the default is REMOTE_ADDR.
 CONTACT_TRUST_PROXY_HEADERS = env("CONTACT_TRUST_PROXY_HEADERS", "False") == "True"
 
 # ---------------------------------------------------------------------------
@@ -226,8 +215,8 @@ ADMIN_LOGIN_GLOBAL_MAX_FAILURES = int(env("ADMIN_LOGIN_GLOBAL_MAX_FAILURES", "30
 
 # ---------------------------------------------------------------------------
 # Logging — errors go to stderr, which gunicorn/systemd (journalctl) and
-# PythonAnywhere's error log capture. Without this, a production 500 or a
-# failed Telegram notification would leave no trace at all.
+# PythonAnywhere's error log capture. Without this, a production 500 would
+# leave no trace at all.
 # ---------------------------------------------------------------------------
 
 LOGGING = {

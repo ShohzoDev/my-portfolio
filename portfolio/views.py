@@ -1,28 +1,14 @@
 import json
-from datetime import timedelta
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse
-from django.utils import timezone
 from django.utils.cache import patch_vary_headers
 from django.utils.safestring import mark_safe
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET
 
-from .content import (
-    DEFAULT_LANGUAGE,
-    LANGUAGE_NAMES,
-    OG_LOCALES,
-    STRINGS,
-    SUPPORTED_LANGUAGES,
-    localized_skills,
-    plural_key,
-)
-from .forms import ContactForm
-from .models import ContactMessage, Project, SiteProfile, SocialLink
-from .notifications import notify_new_message
-from .security import client_ip, ip_hash
+from .content import DEFAULT_LANGUAGE, LANGUAGE_NAMES, OG_LOCALES, STACK, STRINGS, SUPPORTED_LANGUAGES
+from .models import Project, SiteProfile, SocialLink
 
 LANG_COOKIE = "site_lang"
 LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
@@ -95,7 +81,7 @@ def _public_email():
     return "" if email.endswith("@example.com") else email
 
 
-def _localized_projects(lang):
+def _projects(lang):
     strings = STRINGS[lang]
     projects = [p.localized(lang) for p in Project.objects.filter(is_active=True)]
     for p in projects:
@@ -103,139 +89,24 @@ def _localized_projects(lang):
     return projects
 
 
-def _commands(strings, lang, projects, email, github_url, alternates, on_home):
-    """⌘K palette entries, already translated — the JS just filters/executes.
-
-    On the home page sections scroll in place; elsewhere the same entries
-    navigate back to the home page section. Projects open their own sites.
-    """
-    home = f"/{lang}/"
-
-    def goto(target, label, group):
-        if on_home:
-            return {"group": group, "label": label, "kind": "scroll", "target": target}
-        return {"group": group, "label": label, "kind": "href", "href": home + target}
-
-    commands = [
-        goto(target, strings[key], strings["cmdk_group_nav"])
-        for key, target in (
-            ("nav_top", "#top"),
-            ("nav_projects", "#projects"),
-            ("nav_about", "#about"),
-            ("nav_contact", "#contact"),
-        )
-    ]
-    for p in projects:
-        if p["link"]:
-            commands.append(
-                {"group": strings["cmdk_group_projects"], "label": p["title"], "kind": "href",
-                 "href": p["link"], "external": True}
-            )
-    if email:
-        commands += [
-            {"group": strings["cmdk_group_actions"], "label": strings["cmdk_copy_email"], "kind": "copy", "value": email,
-             "done": strings["contact_email_copied"]},
-            {"group": strings["cmdk_group_actions"], "label": strings["contact_email_btn"], "kind": "href", "href": f"mailto:{email}"},
-        ]
-    commands.append(
-        {"group": strings["cmdk_group_actions"], "label": strings["cmdk_github"], "kind": "href", "href": github_url, "external": True}
-    )
-    commands += [
-        {"group": strings["cmdk_group_lang"], "label": alt["name"], "kind": "href", "href": alt["path"], "current": alt["code"] == lang}
-        for alt in alternates
-    ]
-    return commands
-
-
-def _base_context(request, lang, path_for, *, on_home, projects):
-    """Everything base.html needs. `path_for(code)` builds this page's URL in
-    another language (used for hreflang, canonical and the language switch)."""
-    strings = STRINGS[lang]
-    profile = SiteProfile.load()
-    social_links = [s for s in SocialLink.objects.filter(is_active=True) if s.has_link]
-    telegram_url = next((s.url for s in social_links if s.platform == SocialLink.Platform.TELEGRAM), "")
-    github_url = f"https://github.com/{settings.SITE_GITHUB_USERNAME}"
-    email = _public_email()
-
-    alternates = [
-        {"code": code, "name": LANGUAGE_NAMES[code], "path": path_for(code),
-         "url": request.build_absolute_uri(path_for(code))}
-        for code in SUPPORTED_LANGUAGES
-    ]
-    return {
-        "lang": lang,
-        "strings": strings,
-        "profile": profile,
-        "social_links": social_links,
-        "telegram_url": telegram_url,
-        "contact_email": email,
-        "github_url": github_url,
-        "social_handle": settings.SITE_SOCIAL_HANDLE,
-        "home_url": "" if on_home else f"/{lang}/",
-        "canonical_url": request.build_absolute_uri(path_for(lang)),
-        "alternates": alternates,
-        "x_default_url": request.build_absolute_uri("/"),
-        "og_image_url": _abs_static(request, "portfolio/img/og-image.jpg"),
-        "og_locale": OG_LOCALES[lang],
-        "og_locale_alternates": [OG_LOCALES[c] for c in SUPPORTED_LANGUAGES if c != lang],
-        "commands": _commands(strings, lang, projects, email, github_url, alternates, on_home),
-    }
-
-
-def _person(request, lang, profile, strings, social_links, github_url, email, skills):
+def _person(request, lang, name, strings, social_links, github_url, email):
+    """schema.org Person for search engines."""
     person = {
         "@context": "https://schema.org",
         "@type": "Person",
-        "name": profile.full_name,
+        "name": name,
         "jobTitle": strings["hero_role"],
         "description": strings["hero_tagline"],
         "url": request.build_absolute_uri(f"/{lang}/"),
         "image": _abs_static(request, "portfolio/img/profile-800.jpg"),
         "address": {"@type": "PostalAddress", "addressCountry": "UZ"},
         "knowsLanguage": ["uz", "ru", "en"],
-        "knowsAbout": sorted({tag for group in skills for tag in group["tags"]}),
+        "knowsAbout": STACK,
         "sameAs": [github_url] + [s.url for s in social_links if s.url != github_url],
     }
     if email:
         person["email"] = f"mailto:{email}"
     return person
-
-
-def _home_context(request, lang, form=None, sent=False):
-    projects = _localized_projects(lang)
-    context = _base_context(request, lang, lambda code: f"/{code}/", on_home=True, projects=projects)
-    strings = context["strings"]
-    skills = localized_skills(lang)
-    live_count = sum(1 for p in projects if p["status"] == Project.Status.LIVE)
-    person = _person(request, lang, context["profile"], strings, context["social_links"],
-                     context["github_url"], context["contact_email"], skills)
-    profile = context["profile"]
-    now_text = (getattr(profile, f"now_{lang}", "") or "").strip()
-    now_url = ""
-    if now_text and profile.now_project_id:
-        target = next((p for p in projects if p["slug"] == profile.now_project.slug), None)
-        if target:
-            now_url = target["link"]
-    context.update(
-        {
-            "now_text": now_text or strings["fact_status_value"],
-            "now_url": now_url,
-            "projects": projects,
-            "skills": skills,
-            "about_paragraphs": context["profile"].about_paragraphs(lang),
-            "how_items": [
-                {"n": f"0{i}", "title": strings[f"how{i}_t"], "text": strings[f"how{i}_d"]} for i in range(1, 5)
-            ],
-            "live_count": live_count,
-            "badge_label": strings[plural_key(lang, live_count)],
-            "page_title": f"{context['profile'].full_name} — {strings['hero_role']}",
-            "page_description": strings["hero_tagline"],
-            "jsonld": _json_for_script(person),
-            "form": form or ContactForm(lang=lang),
-            "sent": sent,
-        }
-    )
-    return context
 
 
 def _remember_language(response, lang):
@@ -245,64 +116,41 @@ def _remember_language(response, lang):
 
 @require_GET
 def index(request, lang):
-    context = _home_context(request, lang, sent=request.GET.get("sent") == "1")
-    return _remember_language(render(request, "portfolio/index.html", context), lang)
-
-
-# ---------------------------------------------------------------------------
-# Contact form
-# ---------------------------------------------------------------------------
-
-def _rate_limited(hashed_ip):
-    """Counted in the database, so the limit holds across every gunicorn
-    worker and survives restarts (an in-memory cache would give each worker
-    its own counter)."""
-    since = timezone.now() - timedelta(hours=1)
-    recent = ContactMessage.objects.filter(created_at__gte=since)
-    if recent.filter(ip_hash=hashed_ip).count() >= settings.CONTACT_RATE_LIMIT_PER_HOUR:
-        return True
-    return recent.count() >= settings.CONTACT_GLOBAL_LIMIT_PER_HOUR
-
-
-@require_POST
-def contact_submit(request, lang):
     strings = STRINGS[lang]
-    wants_json = request.headers.get("X-Requested-With") == "fetch"
-    form = ContactForm(request.POST, lang=lang)
-    success_url = reverse("portfolio:index", args=[lang]) + "?sent=1#contact"
+    profile = SiteProfile.load()
+    social_links = [s for s in SocialLink.objects.filter(is_active=True) if s.has_link]
+    telegram_url = next((s.url for s in social_links if s.platform == SocialLink.Platform.TELEGRAM), "")
+    github_url = f"https://github.com/{settings.SITE_GITHUB_USERNAME}"
+    email = _public_email()
+    page_title = f"{profile.full_name} — {strings['hero_role']}"
 
-    if form.is_spam:
-        # Pretend it worked — telling a bot it was caught only teaches it.
-        if wants_json:
-            return JsonResponse({"ok": True, "message": strings["form_success"]})
-        return HttpResponseRedirect(success_url)
-
-    hashed_ip = ip_hash(client_ip(request))
-    if _rate_limited(hashed_ip):
-        if wants_json:
-            return JsonResponse({"ok": False, "message": strings["form_rate"], "errors": {}}, status=429)
-        form.add_error(None, strings["form_rate"])
-        return render(request, "portfolio/index.html", _home_context(request, lang, form=form), status=429)
-
-    if not form.is_valid():
-        if wants_json:
-            errors = {field: errs[0] for field, errs in form.errors.items() if field != "__all__"}
-            return JsonResponse({"ok": False, "message": strings["form_error"], "errors": errors}, status=400)
-        return render(request, "portfolio/index.html", _home_context(request, lang, form=form), status=400)
-
-    msg = ContactMessage.objects.create(
-        name=form.cleaned_data["name"],
-        contact=form.cleaned_data["contact"],
-        message=form.cleaned_data["message"],
-        lang=lang,
-        ip_hash=hashed_ip,
-    )
-    if notify_new_message(msg):
-        ContactMessage.objects.filter(pk=msg.pk).update(telegram_sent=True)
-
-    if wants_json:
-        return JsonResponse({"ok": True, "message": strings["form_success"]})
-    return HttpResponseRedirect(success_url)
+    context = {
+        "lang": lang,
+        "strings": strings,
+        "profile": profile,
+        "projects": _projects(lang),
+        "stack": STACK,
+        "social_links": social_links,
+        "telegram_url": telegram_url,
+        "contact_email": email,
+        "social_handle": settings.SITE_SOCIAL_HANDLE,
+        "page_title": page_title,
+        "page_description": strings["hero_tagline"],
+        "canonical_url": request.build_absolute_uri(f"/{lang}/"),
+        "alternates": [
+            {"code": code, "name": LANGUAGE_NAMES[code], "path": f"/{code}/",
+             "url": request.build_absolute_uri(f"/{code}/")}
+            for code in SUPPORTED_LANGUAGES
+        ],
+        "x_default_url": request.build_absolute_uri("/"),
+        "og_image_url": _abs_static(request, "portfolio/img/og-image.jpg"),
+        "og_locale": OG_LOCALES[lang],
+        "og_locale_alternates": [OG_LOCALES[c] for c in SUPPORTED_LANGUAGES if c != lang],
+        "jsonld": _json_for_script(
+            _person(request, lang, profile.full_name, strings, social_links, github_url, email)
+        ),
+    }
+    return _remember_language(render(request, "portfolio/index.html", context), lang)
 
 
 # ---------------------------------------------------------------------------

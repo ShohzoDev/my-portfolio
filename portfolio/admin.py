@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import ContactMessage, Project, SiteProfile, SocialLink
+from .models import Project, SiteProfile, SocialLink
 
 
 @admin.register(SocialLink)
@@ -34,34 +34,9 @@ class ProjectAdmin(admin.ModelAdmin):
         return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', obj.link, obj.domain)
 
 
-@admin.register(ContactMessage)
-class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ("name", "contact", "short_message", "lang", "created_at", "is_read", "telegram_sent")
-    list_filter = ("is_read", "lang", "telegram_sent")
-    search_fields = ("name", "contact", "message")
-    readonly_fields = ("name", "contact", "message", "lang", "created_at", "telegram_sent")
-    fields = ("name", "contact", "message", "lang", "created_at", "telegram_sent", "is_read")
-    actions = ("mark_read",)
-
-    def has_add_permission(self, request):
-        return False
-
-    @admin.display(description="Xabar")
-    def short_message(self, obj):
-        return obj.message if len(obj.message) <= 60 else obj.message[:60] + "…"
-
-    @admin.action(description="O'qilgan deb belgilash")
-    def mark_read(self, request, queryset):
-        queryset.update(is_read=True)
-
-
 @admin.register(SiteProfile)
 class SiteProfileAdmin(admin.ModelAdmin):
-    fieldsets = (
-        (None, {"fields": ("full_name",)}),
-        ("Men haqimda", {"fields": ("about_uz", "about_ru", "about_en")}),
-        ("Hozirgi holat (hero)", {"fields": ("now_uz", "now_ru", "now_en", "now_project")}),
-    )
+    fields = ("full_name",)
 
     def has_add_permission(self, request):
         return not SiteProfile.objects.exists()

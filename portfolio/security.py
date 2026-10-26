@@ -1,12 +1,11 @@
 """
 Small security pieces shared by the views:
 
-- client IP + its salted hash (rate limits store only the hash),
+- client IP + its salted hash (login throttling stores only the hash),
 - admin login throttling (password guessing),
 - security response headers incl. Content-Security-Policy.
 """
 
-import base64
 import hashlib
 import logging
 from datetime import timedelta
@@ -20,21 +19,15 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-# The one inline script on the site (adds the `js` class before first paint so
-# reveal animations never flash). CSP allows exactly this text via its hash —
-# templates/portfolio/base.html must contain it byte-for-byte (a test checks).
-JS_FLAG_SCRIPT = 'document.documentElement.classList.add("js")'
-JS_FLAG_HASH = "sha256-" + base64.b64encode(hashlib.sha256(JS_FLAG_SCRIPT.encode()).digest()).decode()
-
 CONTENT_SECURITY_POLICY = "; ".join(
     [
         "default-src 'self'",
-        f"script-src 'self' '{JS_FLAG_HASH}'",
+        "script-src 'none'",  # the public site runs no JavaScript at all
         "style-src 'self'",
         "img-src 'self' data:",
         "font-src 'self'",
-        "connect-src 'self'",
-        "form-action 'self'",
+        "connect-src 'none'",
+        "form-action 'none'",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "object-src 'none'",
