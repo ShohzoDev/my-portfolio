@@ -129,6 +129,9 @@ def index(request, lang):
         "strings": strings,
         "profile": profile,
         "projects": _projects(lang),
+        "services": [
+            {"n": f"0{i}", "title": strings[f"s{i}_t"], "desc": strings[f"s{i}_d"]} for i in range(1, 5)
+        ],
         "stack": STACK,
         "social_links": social_links,
         "telegram_url": telegram_url,

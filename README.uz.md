@@ -3,11 +3,12 @@
 [English README](README.md)
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
-`/uz/`, `/ru/`, `/en/`). Bitta sahifa, aniq bo'limlar: hero, 01 Xizmatlar,
-02 Loyihalar, 03 Men haqimda, 04 Aloqa — tepada menyu bilan. Har bir loyihaning
+`/uz/`, `/ru/`, `/en/`). Desktopda sahifa ikkiga bo'lingan: chapda ism,
+kasb, holat, bo'limlar menyusi va ijtimoiy tarmoqlar joyida turadi, o'ngda
+Men haqimda, Xizmatlar, Loyihalar va Aloqa aylanadi. Telefonda bitta ustun. Har bir loyihaning
 o'z sayti bor, shuning uchun portfolio ularni havolalar ro'yxati sifatida
-ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS,
-faqat mobil menyuni yopish uchun bitta kichik skript bor.
+ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS;
+`site.js` faqat menyuda joriy bo'limni yoritadi va kursor nurini qo'shadi.
 
 ## Tuzilishi
 
@@ -21,7 +22,7 @@ portfolio/
   security.py              — CSP sarlavhalari, admin login cheklovi, IP hash
   tests.py                 — avtomatik testlar
 templates/portfolio/       — base.html, index.html, _lang.html, _socials.html
-static/portfolio/          — css, js/menu.js, rasmlar, o'z serverimizdagi shriftlar
+static/portfolio/          — css, js/site.js, rasmlar, o'z serverimizdagi shriftlar
 ```
 
 ## Nimani qayerdan o'zgartirasiz

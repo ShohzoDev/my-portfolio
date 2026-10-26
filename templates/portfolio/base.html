@@ -42,46 +42,8 @@
 
 <a class="skip-link" href="#main">{{ strings.skip_link }}</a>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="#top" aria-label="{{ profile.full_name }}">
-      <span class="brand-mark" aria-hidden="true">S</span>
-      <span class="brand-name">{{ social_handle }}</span>
-    </a>
-
-    <nav class="nav" aria-label="{{ strings.menu_label }}">
-      <a href="#services">{{ strings.nav_services }}</a>
-      <a href="#projects">{{ strings.nav_projects }}</a>
-      <a href="#about">{{ strings.nav_about }}</a>
-      <a href="#contact">{{ strings.nav_contact }}</a>
-    </nav>
-
-    <div class="header-end">
-      {% include "portfolio/_lang.html" %}
-      <details class="menu">
-        <summary aria-label="{{ strings.menu_label }}"><span></span><span></span><span></span></summary>
-        <nav class="menu-panel" aria-label="{{ strings.menu_label }}">
-          <a href="#services">{{ strings.nav_services }}</a>
-          <a href="#projects">{{ strings.nav_projects }}</a>
-          <a href="#about">{{ strings.nav_about }}</a>
-          <a href="#contact">{{ strings.nav_contact }}</a>
-        </nav>
-      </details>
-    </div>
-  </div>
-</header>
-
-<main id="main">
 {% block content %}{% endblock %}
-</main>
 
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <span>&copy; {% now "Y" %} {{ profile.full_name }} · {{ strings.footer_built }}</span>
-    <a href="#top">{{ strings.back_to_top }} <span aria-hidden="true">↑</span></a>
-  </div>
-</footer>
-
-<script src="{% static 'portfolio/js/menu.js' %}" defer></script>
+<script src="{% static 'portfolio/js/site.js' %}" defer></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 
 Personal portfolio of a Django backend engineer, built with Django 5.2.
 Server-rendered, trilingual (Uzbek / Russian / English), plain HTML and CSS
-plus one tiny script for the mobile menu.
+plus one small script that only adds polish.
 
 [O'zbekcha qo'llanma → README.uz.md](README.uz.md)
 
@@ -12,9 +12,11 @@ plus one tiny script for the mobile menu.
 
 ## What's inside
 
-- **One page, clear sections:** hero, 01 Services, 02 Projects, 03 About,
-  04 Contact, with a menu in the header. Every section opens the same way
-  (numbered eyebrow, title, one-line lead), so the page reads in order.
+- **Split layout:** on desktop the left column stays put (name, role, one
+  line, status, section menu, social links) while the right column scrolls
+  through About, Services, Projects and Contact; the menu highlights the
+  section you are reading. On phones it is one column with sticky section
+  titles.
 - **Projects as a directory of links.** Every project already has its own
   live site, so each row is just the name, one line and the domain, and
   the whole row opens the site.

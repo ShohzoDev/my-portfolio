@@ -159,31 +159,32 @@ class IndexPageTests(TestCase):
         self.assertIn("https://github.com/ShohzoDev", data["sameAs"])
         self.assertIn("https://t.me/ShohzoDev", data["sameAs"])
 
-    def test_page_has_numbered_sections_and_menu(self):
+    def test_split_layout_with_section_menu(self):
         for lang in SUPPORTED_LANGUAGES:
             strings = STRINGS[lang]
             html = self.get(lang)
-            ids = re.findall(r'<section class="[a-z ]+" id="([a-z]+)"', html)
-            self.assertEqual(ids, ["top", "services", "projects", "about", "contact"])
-            self.assertEqual(re.findall(r'<p class="eyebrow"><span>(\d\d)</span>', html), ["01", "02", "03", "04"])
-            for key in ("nav_services", "nav_projects", "nav_about", "nav_contact"):
-                self.assertEqual(html.count(f">{strings[key]}</a>"), 2, key)  # desktop nav + mobile menu
+            self.assertIn('<header class="side" id="top">', html)
+            self.assertEqual(re.findall(r'<section id="([a-z]+)"', html), ["about", "services", "projects", "contact"])
+            # the left menu points at every section, in page order
+            self.assertEqual(re.findall(r'<li><a href="#([a-z]+)">', html), ["about", "services", "projects", "contact"])
+            for key in ("nav_about", "nav_services", "nav_projects", "nav_contact"):
+                self.assertIn(strings[key], html)
             for n in range(1, 5):
                 self.assertIn(strings[f"s{n}_t"].replace("'", "&#x27;"), html)
-            self.assertIn(f"<em>{strings['hero_headline_em']}</em>", html)
-            self.assertIn(strings["about_p1"].replace("'", "&#x27;"), html)
+                self.assertIn(f'<span class="row-side">0{n}</span>', html)
+            self.assertIn(strings["side_lead"].replace("'", "&#x27;"), html)
+            self.assertIn(strings["about_p2"].replace("'", "&#x27;"), html)
             for tool in STACK:
                 self.assertIn(f"<li>{tool}</li>", html)
-            self.assertIn('<details class="menu">', html)  # mobile menu without JavaScript
             self.assertNotIn("{#", html)  # no leaked template syntax
             self.assertNotIn("{%", html)
-            for gone in ('class="diagram', "<form", "cmdk", "script.js"):  # removed in the redesign
+            for gone in ('class="diagram', "<form", "cmdk", "script.js", "menu.js"):  # removed in redesigns
                 self.assertNotIn(gone, html)
 
     def test_projects_are_rows_linking_to_their_sites(self):
         html = self.get("en")
-        section = html[html.index('id="projects"'):html.index('id="contact"')]
-        rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="proj-row" href="([^"]+)" target="_blank" rel="noopener">', section)
+        section = html[html.index('<section id="projects"'):html.index('<section id="contact"')]
+        rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="row is-link" href="([^"]+)" target="_blank" rel="noopener">', section)
         self.assertEqual(
             rows,
             [
@@ -195,7 +196,7 @@ class IndexPageTests(TestCase):
             ],
         )
         for domain in ("zebest.uz", "buildbest.uz", "oqqushlar.uz", "geodezistman.uz"):
-            self.assertIn(f"<span>{domain}</span>", section)
+            self.assertIn(f'<span class="row-side">{domain}</span>', section)
         self.assertNotIn("https://", re.sub(r'href="[^"]+"', "", section))  # domains shown bare
         self.assertNotIn("BuildOps", html)
         self.assertNotIn("p-geo-portfolio", html)
@@ -206,7 +207,7 @@ class IndexPageTests(TestCase):
         html = self.get("en")
         row = html[html.index('id="p-lingvoapp"'):]
         row = row[:row.index("</li>")]
-        self.assertIn('<div class="proj-row">', row)
+        self.assertIn('<div class="row">', row)
         self.assertIn(STRINGS["en"]["status_dev"], row)  # non-live status is spelled out
         self.assertNotIn("href=", row)
 
@@ -237,7 +238,8 @@ class IndexPageTests(TestCase):
 
     def test_telegram_is_the_main_button(self):
         html = self.get("en")
-        self.assertEqual(html.count('href="https://t.me/ShohzoDev" target="_blank" rel="noopener">' + STRINGS["en"]["contact_telegram_btn"]), 2)  # hero + contact
+        self.assertIn('<a class="btn" href="https://t.me/ShohzoDev" target="_blank" rel="noopener">'
+                      + STRINGS["en"]["contact_telegram_btn"], html)
         SocialLink.objects.filter(platform="telegram").update(url="")
         self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
 
@@ -255,7 +257,7 @@ class IndexPageTests(TestCase):
         SiteProfile.objects.update(full_name="Shohzod Testov")
         html = self.get("en")
         self.assertIn("<title>Shohzod Testov — Django Backend Engineer</title>", html)
-        self.assertIn('<span class="portrait-name">Shohzod Testov</span>', html)
+        self.assertIn('<h1 class="name">Shohzod Testov</h1>', html)
         data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
         self.assertEqual(data["name"], "Shohzod Testov")
 
@@ -304,10 +306,10 @@ class SecurityTests(TestCase):
         self.assertIn("frame-ancestors 'none'", csp)
         self.assertIn("camera=()", response["Permissions-Policy"])
         html = response.content.decode()
-        # JSON-LD data (never executes) and the one external menu script — no inline code.
+        # JSON-LD data (never executes) and the one external script — no inline code.
         self.assertEqual(
             re.findall(r"<script([^>]*)>", html),
-            [' type="application/ld+json"', ' src="/static/portfolio/js/menu.js" defer'],
+            [' type="application/ld+json"', ' src="/static/portfolio/js/site.js" defer'],
         )
         self.assertNotIn(" style=", html)  # style-src 'self' forbids inline styles
 

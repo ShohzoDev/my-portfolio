@@ -1,4 +1,3 @@
 <nav class="lang" aria-label="{{ strings.lang_group_label }}">
-  <svg class="lang-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.2 2.2 3.2 4.7 3.2 7.5s-1 5.3-3.2 7.5c-2.2-2.2-3.2-4.7-3.2-7.5s1-5.3 3.2-7.5Z"/></svg>
   {% for alt in alternates %}<a href="{{ alt.path }}" hreflang="{{ alt.code }}" lang="{{ alt.code }}" title="{{ alt.name }}"{% if alt.code == lang %} class="active" aria-current="true"{% endif %}>{{ alt.code|upper }}</a>{% endfor %}
 </nav>
