@@ -1,6 +1,10 @@
 """
 The site's copy in UZ/RU/EN — one place to edit every label and text.
 
+In the About paragraphs, *stars* mark a key phrase (shown highlighted) and a
+project name such as Zebest becomes a link to its site automatically — see
+the `highlight` filter in templatetags/portfolio_extras.py.
+
 Projects and the owner's name live in the database (admin panel), not here.
 Uzbek copy uses the updated Latin alphabet (Ş, Ç, Ö, Ğ — see uz_alphabet.py);
 project and brand names keep their own spelling (Oqqushlar, oqqushlar.uz).
@@ -23,8 +27,8 @@ STRINGS = {
         "hero_tagline": "ERP, SaaS va biznes platformalar — arxitekturadan serverga qöyişgaça, boşidan oxirigaça özim.",
         "hero_status": "Yangi loyihalarga oçiqman",
         "socials_label": "Ijtimoiy tarmoqlar",
-        "about_p1": "Men Shohzod — Özbekistonda işlaydigan Django backend muhandisiman. Biznes jarayonini tuşunişdan tortib arxitektura, kod, server va xavfsizlikkaça — loyihani boşidan production'gaça özim olib boraman.",
-        "about_p2": "Hozir restoranlar uçun Zebest platformasining asosçisiman va quriliş kompaniyalari uçun BuildBest tizimini rivojlantiryapman. Işga tuşgandan keyin ham tizimni kuzatib, qöllab-quvvatlab boraman.",
+        "about_p1": "Men Shohzod — Özbekistonda işlaydigan *Django backend muhandisiman*. Biznes jarayonini tuşunişdan tortib arxitektura, kod, server va xavfsizlikkaça — loyihani *boşidan production'gaça* özim olib boraman.",
+        "about_p2": "Hozir restoranlar uçun Zebest platformasining *asosçisiman* va quriliş kompaniyalari uçun BuildBest tizimini rivojlantiryapman. Işga tuşgandan keyin ham tizimni *kuzatib, qöllab-quvvatlab* boraman.",
         "s1_t": "Biznes tizimlari",
         "s1_d": "ERP va CRM: hisob, xodimlar, ombor va moliya — bitta tizimda.",
         "s2_t": "SaaS platformalar",
@@ -58,8 +62,8 @@ STRINGS = {
         "hero_tagline": "ERP, SaaS и бизнес-платформы — от архитектуры до запуска на сервере, от начала до конца сам.",
         "hero_status": "Открыт для новых проектов",
         "socials_label": "Соцсети",
-        "about_p1": "Я Шохзод — Django backend-инженер из Узбекистана. От понимания бизнес-процесса до архитектуры, кода, серверов и безопасности — веду проект сам, от начала до продакшена.",
-        "about_p2": "Сейчас я основатель Zebest — платформы для ресторанов — и развиваю BuildBest, систему для строительных компаний. После запуска продолжаю следить за системой и поддерживать её.",
+        "about_p1": "Я Шохзод — *Django backend-инженер* из Узбекистана. От понимания бизнес-процесса до архитектуры, кода, серверов и безопасности — веду проект сам, *от начала до продакшена*.",
+        "about_p2": "Сейчас я *основатель* Zebest — платформы для ресторанов — и развиваю BuildBest, систему для строительных компаний. После запуска продолжаю *следить за системой и поддерживать её*.",
         "s1_t": "Бизнес-системы",
         "s1_d": "ERP и CRM: учёт, сотрудники, склад и финансы — в одной системе.",
         "s2_t": "SaaS-платформы",
@@ -93,8 +97,8 @@ STRINGS = {
         "hero_tagline": "ERP systems, SaaS and business platforms — from architecture to the live server, built end to end by me.",
         "hero_status": "Open to new projects",
         "socials_label": "Social profiles",
-        "about_p1": "I'm Shohzod, a Django backend engineer based in Uzbekistan. From understanding the business process to architecture, code, servers and security, I take a project from scratch to production myself.",
-        "about_p2": "I'm the founder of Zebest, a platform for restaurants, and I'm building BuildBest, a system for construction companies. After launch I keep monitoring and supporting the system.",
+        "about_p1": "I'm Shohzod, a *Django backend engineer* based in Uzbekistan. From understanding the business process to architecture, code, servers and security, I take a project *from scratch to production* myself.",
+        "about_p2": "I'm the *founder* of Zebest, a platform for restaurants, and I'm building BuildBest, a system for construction companies. After launch I keep *monitoring and supporting* the system.",
         "s1_t": "Business systems",
         "s1_d": "ERP and CRM: accounting, staff, stock and finance in one system.",
         "s2_t": "SaaS platforms",

@@ -1,11 +1,18 @@
-{% extends "portfolio/base.html" %}
+{% extends "portfolio/base.html" %}{% load static portfolio_extras %}
 
 {% block content %}
 <div class="layout">
   <header class="side" id="top">
     <div>
       {% include "portfolio/_lang.html" %}
-      <h1 class="name">{{ profile.full_name }}</h1>
+      <div class="identity">
+        <picture>
+          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %}">
+          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %}">
+          <img class="avatar" src="{% static 'portfolio/img/profile-400.jpg' %}" alt="" width="76" height="76" fetchpriority="high">
+        </picture>
+        <h1 class="name">{{ profile.full_name }}</h1>
+      </div>
       <p class="role">{{ strings.hero_role }}</p>
       <p class="lead">{{ strings.side_lead }}</p>
       <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.hero_status }}</p>
@@ -27,8 +34,8 @@
     <section id="about" aria-labelledby="about-title">
       <h2 class="sticky-title" id="about-title">{{ strings.nav_about }}</h2>
       <div class="about">
-        <p>{{ strings.about_p1 }}</p>
-        <p>{{ strings.about_p2 }}</p>
+        <p>{{ strings.about_p1|highlight:projects }}</p>
+        <p>{{ strings.about_p2|highlight:projects }}</p>
       </div>
       <ul class="chips">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul>
     </section>

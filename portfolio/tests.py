@@ -173,13 +173,26 @@ class IndexPageTests(TestCase):
                 self.assertIn(strings[f"s{n}_t"].replace("'", "&#x27;"), html)
                 self.assertIn(f'<span class="row-side">0{n}</span>', html)
             self.assertIn(strings["side_lead"].replace("'", "&#x27;"), html)
-            self.assertIn(strings["about_p2"].replace("'", "&#x27;"), html)
+            self.assertNotIn("*", html[html.index('<div class="about">'):html.index('<ul class="chips">')])
+            self.assertIn('<a href="https://zebest.uz" target="_blank" rel="noopener">Zebest</a>', html)
+            self.assertIn('class="avatar"', html)
             for tool in STACK:
                 self.assertIn(f"<li>{tool}</li>", html)
             self.assertNotIn("{#", html)  # no leaked template syntax
             self.assertNotIn("{%", html)
             for gone in ('class="diagram', "<form", "cmdk", "script.js", "menu.js"):  # removed in redesigns
                 self.assertNotIn(gone, html)
+
+    def test_highlight_filter(self):
+        from .templatetags.portfolio_extras import highlight
+
+        projects = [{"title": "Zebest", "link": "https://zebest.uz"}, {"title": "Draft", "link": ""}]
+        out = highlight("I *founded* Zebest, not Draft. Zebest again <script>", projects)
+        self.assertEqual(
+            out,
+            'I <strong>founded</strong> <a href="https://zebest.uz" target="_blank" rel="noopener">Zebest</a>,'
+            " not Draft. Zebest again &lt;script&gt;",  # first mention only; text is escaped
+        )
 
     def test_projects_are_rows_linking_to_their_sites(self):
         html = self.get("en")

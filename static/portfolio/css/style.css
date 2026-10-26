@@ -160,6 +160,18 @@ ul, ol { list-style: none; }
 .lang a:hover { color: var(--ink); border-color: var(--mute); }
 .lang a.active { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
 
+.identity { display: flex; align-items: center; gap: 20px; }
+.avatar {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 18%;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px rgba(76, 154, 255, 0.5), 0 10px 30px -10px rgba(76, 154, 255, 0.55);
+}
+
 .name {
   color: var(--ink);
   font-size: clamp(2.5rem, 1.6rem + 2.2vw, 3.3rem);
@@ -237,7 +249,15 @@ main section + section { margin-top: 112px; }
 
 .about p { font-size: 16.5px; line-height: 1.75; }
 .about p + p { margin-top: 16px; }
-.about p:first-child { color: var(--ink); }
+/* key phrases and product links: the eye can skim just these */
+.about strong { color: var(--ink); font-weight: 500; }
+.about a {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 1px solid rgba(76, 154, 255, 0.5);
+  transition: color 0.15s, border-color 0.15s;
+}
+.about a:hover { color: var(--acc); border-color: var(--acc); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .chips li {
@@ -383,6 +403,8 @@ a.row:hover .row-arrow { transform: translate(3px, -3px); }
   .layout { padding: 0 20px; }
   .sticky-title { margin: 0 -20px 16px; padding: 16px 20px; }
   .name { font-size: 2.5rem; }
+  .identity { gap: 16px; }
+  .avatar { width: 64px; height: 64px; }
   .role { font-size: 18px; }
   .contact-title { font-size: 24px; }
   .btn { width: 100%; justify-content: center; }

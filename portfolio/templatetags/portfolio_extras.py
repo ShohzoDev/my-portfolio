@@ -53,3 +53,23 @@ def social_icon(platform):
         'xmlns="http://www.w3.org/2000/svg">' + path + "</svg>"
     )
     return mark_safe(svg)
+
+
+@register.filter
+def highlight(text, projects):
+    """About-text markup: *key phrase* → <strong>, and every project name
+    (Zebest, BuildBest…) → a link to that project's site. The text is
+    escaped first, so the copy itself can never inject HTML."""
+    import re
+
+    from django.utils.html import escape, format_html
+
+    html = escape(text)
+    html = re.sub(r"\*([^*]+)\*", r"<strong>\1</strong>", html)
+    for p in projects or []:
+        if not p.get("link"):
+            continue
+        name = escape(p["title"])
+        link = format_html('<a href="{}" target="_blank" rel="noopener">{}</a>', p["link"], p["title"])
+        html = re.sub(rf"(?<![\w>]){re.escape(name)}(?![\w<])", lambda m, link=link: link, html, count=1)
+    return mark_safe(html)
