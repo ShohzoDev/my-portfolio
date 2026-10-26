@@ -4,7 +4,7 @@
 
 Personal portfolio of a Django backend engineer, built with Django 5.2.
 Server-rendered, trilingual (Uzbek / Russian / English), plain HTML and CSS
-with no JavaScript at all.
+plus one tiny script for the mobile menu.
 
 [O'zbekcha qo'llanma → README.uz.md](README.uz.md)
 
@@ -12,9 +12,9 @@ with no JavaScript at all.
 
 ## What's inside
 
-- **One short page, three parts:** who I am (photo, headline, stack,
-  Telegram and social links), projects, contact. About two phone screens
-  long.
+- **One page, clear sections:** hero, 01 Services, 02 Projects, 03 About,
+  04 Contact, with a menu in the header. Every section opens the same way
+  (numbered eyebrow, title, one-line lead), so the page reads in order.
 - **Projects as a directory of links.** Every project already has its own
   live site, so each row is just the name, one line and the domain, and
   the whole row opens the site.
@@ -25,8 +25,8 @@ with no JavaScript at all.
   links without a URL stay hidden; the Telegram link becomes the main
   button.
 - **Security:**
-  - strict Content-Security-Policy (`script-src 'none'`: the page runs no
-    scripts) and a Permissions-Policy;
+  - strict Content-Security-Policy (`script-src 'self'`, no inline code)
+    and a Permissions-Policy;
   - admin login throttling and a configurable admin path;
   - production hardening (HSTS, secure cookies, SSL redirect);
   - errors are logged to stderr.
@@ -64,7 +64,7 @@ The suite covers:
 - routing and language detection;
 - SEO output (hreflang, canonical, JSON-LD, sitemap);
 - the one-page layout, the project list and the content migrations;
-- CSP (no executable scripts on the page);
+- CSP (no inline scripts or styles);
 - admin login throttling.
 
 GitHub Actions runs it on every push.

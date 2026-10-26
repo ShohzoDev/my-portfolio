@@ -159,20 +159,25 @@ class IndexPageTests(TestCase):
         self.assertIn("https://github.com/ShohzoDev", data["sameAs"])
         self.assertIn("https://t.me/ShohzoDev", data["sameAs"])
 
-    def test_one_short_page_three_parts(self):
+    def test_page_has_numbered_sections_and_menu(self):
         for lang in SUPPORTED_LANGUAGES:
             strings = STRINGS[lang]
             html = self.get(lang)
-            self.assertEqual(re.findall(r'<section class="([a-z ]+)"', html), ["intro", "block", "block contact"])
+            ids = re.findall(r'<section class="[a-z ]+" id="([a-z]+)"', html)
+            self.assertEqual(ids, ["top", "services", "projects", "about", "contact"])
+            self.assertEqual(re.findall(r'<p class="eyebrow"><span>(\d\d)</span>', html), ["01", "02", "03", "04"])
+            for key in ("nav_services", "nav_projects", "nav_about", "nav_contact"):
+                self.assertEqual(html.count(f">{strings[key]}</a>"), 2, key)  # desktop nav + mobile menu
+            for n in range(1, 5):
+                self.assertIn(strings[f"s{n}_t"].replace("'", "&#x27;"), html)
             self.assertIn(f"<em>{strings['hero_headline_em']}</em>", html)
-            self.assertIn(strings["hero_tagline"].replace("'", "&#x27;"), html)
-            self.assertIn(strings["contact_title"], html)
+            self.assertIn(strings["about_p1"].replace("'", "&#x27;"), html)
             for tool in STACK:
                 self.assertIn(f"<li>{tool}</li>", html)
+            self.assertIn('<details class="menu">', html)  # mobile menu without JavaScript
             self.assertNotIn("{#", html)  # no leaked template syntax
             self.assertNotIn("{%", html)
-            # gone with the redesign
-            for gone in ('class="diagram', 'id="about"', "<form", "cmdk", "script.js"):
+            for gone in ('class="diagram', "<form", "cmdk", "script.js"):  # removed in the redesign
                 self.assertNotIn(gone, html)
 
     def test_projects_are_rows_linking_to_their_sites(self):
@@ -232,7 +237,7 @@ class IndexPageTests(TestCase):
 
     def test_telegram_is_the_main_button(self):
         html = self.get("en")
-        self.assertEqual(html.count('class="btn btn-primary" href="https://t.me/ShohzoDev"'), 2)  # intro + contact
+        self.assertEqual(html.count('href="https://t.me/ShohzoDev" target="_blank" rel="noopener">' + STRINGS["en"]["contact_telegram_btn"]), 2)  # hero + contact
         SocialLink.objects.filter(platform="telegram").update(url="")
         self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
 
@@ -250,7 +255,7 @@ class IndexPageTests(TestCase):
         SiteProfile.objects.update(full_name="Shohzod Testov")
         html = self.get("en")
         self.assertIn("<title>Shohzod Testov — Django Backend Engineer</title>", html)
-        self.assertIn('<p class="me-name">Shohzod Testov</p>', html)
+        self.assertIn('<span class="portrait-name">Shohzod Testov</span>', html)
         data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
         self.assertEqual(data["name"], "Shohzod Testov")
 
@@ -294,12 +299,16 @@ class SecurityTests(TestCase):
         response = self.client.get("/en/")
         csp = response["Content-Security-Policy"]
         self.assertEqual(csp, CONTENT_SECURITY_POLICY)
-        self.assertIn("script-src 'none'", csp)
+        self.assertIn("script-src 'self'", csp)
+        self.assertNotIn("unsafe-inline", csp)
         self.assertIn("frame-ancestors 'none'", csp)
         self.assertIn("camera=()", response["Permissions-Policy"])
         html = response.content.decode()
-        # The only <script> is JSON-LD data, which never executes.
-        self.assertEqual(re.findall(r"<script([^>]*)>", html), [' type="application/ld+json"'])
+        # JSON-LD data (never executes) and the one external menu script — no inline code.
+        self.assertEqual(
+            re.findall(r"<script([^>]*)>", html),
+            [' type="application/ld+json"', ' src="/static/portfolio/js/menu.js" defer'],
+        )
         self.assertNotIn(" style=", html)  # style-src 'self' forbids inline styles
 
     def test_admin_is_left_without_csp(self):

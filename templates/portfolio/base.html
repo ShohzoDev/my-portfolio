@@ -42,20 +42,46 @@
 
 <a class="skip-link" href="#main">{{ strings.skip_link }}</a>
 
-<div class="wrap">
-  <header class="site-header">
-    <a class="brand" href="/{{ lang }}/">{{ social_handle }}</a>
-    <nav class="lang-switch" aria-label="{{ strings.lang_group_label }}">
-      {% for alt in alternates %}<a href="{{ alt.path }}" hreflang="{{ alt.code }}" lang="{{ alt.code }}" title="{{ alt.name }}"{% if alt.code == lang %} class="active" aria-current="true"{% endif %}>{{ alt.code|upper }}</a>{% endfor %}
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="#top" aria-label="{{ profile.full_name }}">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-name">{{ social_handle }}</span>
+    </a>
+
+    <nav class="nav" aria-label="{{ strings.menu_label }}">
+      <a href="#services">{{ strings.nav_services }}</a>
+      <a href="#projects">{{ strings.nav_projects }}</a>
+      <a href="#about">{{ strings.nav_about }}</a>
+      <a href="#contact">{{ strings.nav_contact }}</a>
     </nav>
-  </header>
 
-  <main id="main">
+    <div class="header-end">
+      {% include "portfolio/_lang.html" %}
+      <details class="menu">
+        <summary aria-label="{{ strings.menu_label }}"><span></span><span></span><span></span></summary>
+        <nav class="menu-panel" aria-label="{{ strings.menu_label }}">
+          <a href="#services">{{ strings.nav_services }}</a>
+          <a href="#projects">{{ strings.nav_projects }}</a>
+          <a href="#about">{{ strings.nav_about }}</a>
+          <a href="#contact">{{ strings.nav_contact }}</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main id="main">
 {% block content %}{% endblock %}
-  </main>
+</main>
 
-  <footer class="site-footer">&copy; {% now "Y" %} {{ profile.full_name }}</footer>
-</div>
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>&copy; {% now "Y" %} {{ profile.full_name }} · {{ strings.footer_built }}</span>
+    <a href="#top">{{ strings.back_to_top }} <span aria-hidden="true">↑</span></a>
+  </div>
+</footer>
 
+<script src="{% static 'portfolio/js/menu.js' %}" defer></script>
 </body>
 </html>

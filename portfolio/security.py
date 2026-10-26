@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 CONTENT_SECURITY_POLICY = "; ".join(
     [
         "default-src 'self'",
-        "script-src 'none'",  # the public site runs no JavaScript at all
+        "script-src 'self'",  # only static/portfolio/js/menu.js, no inline code
         "style-src 'self'",
         "img-src 'self' data:",
         "font-src 'self'",

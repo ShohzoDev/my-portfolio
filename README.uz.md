@@ -3,11 +3,11 @@
 [English README](README.md)
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
-`/uz/`, `/ru/`, `/en/`). Bitta qisqa sahifa, 3 qism: kimman (rasm, sarlavha,
-stek, Telegram va ijtimoiy tarmoqlar), loyihalar, aloqa. Har bir loyihaning
+`/uz/`, `/ru/`, `/en/`). Bitta sahifa, aniq bo'limlar: hero, 01 Xizmatlar,
+02 Loyihalar, 03 Men haqimda, 04 Aloqa — tepada menyu bilan. Har bir loyihaning
 o'z sayti bor, shuning uchun portfolio ularni havolalar ro'yxati sifatida
-ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS —
-JavaScript yo'q.
+ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS,
+faqat mobil menyuni yopish uchun bitta kichik skript bor.
 
 ## Tuzilishi
 
@@ -20,8 +20,8 @@ portfolio/
   views.py                 — bosh sahifa, til yo'naltirish, robots/sitemap
   security.py              — CSP sarlavhalari, admin login cheklovi, IP hash
   tests.py                 — avtomatik testlar
-templates/portfolio/       — base.html, index.html, _socials.html
-static/portfolio/          — css, rasmlar, o'z serverimizdagi shriftlar
+templates/portfolio/       — base.html, index.html, _lang.html, _socials.html
+static/portfolio/          — css, js/menu.js, rasmlar, o'z serverimizdagi shriftlar
 ```
 
 ## Nimani qayerdan o'zgartirasiz
@@ -36,7 +36,8 @@ static/portfolio/          — css, rasmlar, o'z serverimizdagi shriftlar
 - **Ijtimoiy tarmoqlar** — admin panel → *Ijtimoiy tarmoqlar*. Faqat URL
   kiritilganlari saytda ko'rinadi. **Telegram** URL'i kiritilsa, u
   saytdagi asosiy "Telegram'da yozing" tugmasiga aylanadi.
-- **Matnlar va stek qatori** — `portfolio/content.py` (`STRINGS`, `STACK`). Uchala
+- **Barcha matnlar** (xizmatlar, «Men haqimda», faktlar) va stek —
+  `portfolio/content.py` (`STRINGS`, `STACK`). Uchala
   tilda kalitlar bir xil bo'lishi shart — testlar buni tekshiradi.
 
 ## Mahalliy ishga tushirish (PowerShell)
@@ -73,7 +74,7 @@ python manage.py test
   keyin login vaqtincha bloklanadi (`ADMIN_LOGIN_MAX_FAILURES`,
   `ADMIN_LOGIN_WINDOW_MINUTES`).
 - **Content-Security-Policy**: sayt faqat o'z serveridagi stil, shrift va
-  rasmlarni yuklaydi; JavaScript umuman yo'q (`script-src 'none'`). Admin
+  rasmlarni yuklaydi; inline skript yo'q (`script-src 'self'`). Admin
   panelga CSP qo'yilmaydi.
 - **Proksi**: `CONTACT_TRUST_PROXY_HEADERS=True` faqat sayt nginx yoki
   PythonAnywhere orqasida turganda yoqiladi — shunda admin login cheklovi

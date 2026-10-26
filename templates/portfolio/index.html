@@ -1,32 +1,71 @@
 {% extends "portfolio/base.html" %}{% load static %}
 
 {% block content %}
-    <section class="intro" aria-labelledby="headline">
-      <div class="me">
-        <picture>
-          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %}">
-          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %}">
-          <img src="{% static 'portfolio/img/profile-400.jpg' %}" alt="{{ profile.full_name }}" width="72" height="72">
-        </picture>
-        <div>
-          <p class="me-name">{{ profile.full_name }}</p>
-          <p class="me-role">{{ strings.hero_role }}</p>
+  <section class="hero" id="top" aria-labelledby="headline">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.hero_status }}</p>
+        <h1 class="headline" id="headline">{{ strings.hero_headline_pre }}<em>{{ strings.hero_headline_em }}</em>{{ strings.hero_headline_post }}</h1>
+        <p class="tagline">{{ strings.hero_tagline }}</p>
+        <div class="actions">
+          {% if telegram_url %}<a class="btn btn-primary" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
+          <a class="btn btn-ghost" href="#projects">{{ strings.hero_cta_projects }} <span aria-hidden="true">↓</span></a>
         </div>
       </div>
 
-      <h1 class="headline" id="headline">{{ strings.hero_headline_pre }}<em>{{ strings.hero_headline_em }}</em>{{ strings.hero_headline_post }}</h1>
-      <p class="tagline">{{ strings.hero_tagline }}</p>
-      <ul class="stack">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul>
+      <figure class="portrait">
+        <picture>
+          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 900px) 240px, 360px">
+          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 900px) 240px, 360px">
+          <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ profile.full_name }}" width="800" height="864" fetchpriority="high">
+        </picture>
+        <figcaption>
+          <span class="portrait-name">{{ profile.full_name }}</span>
+          <span class="portrait-role">{{ strings.hero_role }}</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
 
-      <div class="actions">
-        {% if telegram_url %}<a class="btn btn-primary" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
-        <a class="btn btn-ghost" href="#projects">{{ strings.hero_cta_projects }} <span aria-hidden="true">↓</span></a>
-        {% if social_links %}<nav class="socials" aria-label="{{ strings.socials_label }}">{% include "portfolio/_socials.html" %}</nav>{% endif %}
-      </div>
-    </section>
+  <section class="section" id="services" aria-labelledby="services-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow"><span>01</span>{{ strings.services_eyebrow }}</p>
+        <h2 id="services-title">{{ strings.services_title }}</h2>
+        <p class="section-lead">{{ strings.services_lead }}</p>
+      </header>
+      <ul class="services">
+        <li class="service">
+          <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg></span>
+          <h3>{{ strings.s1_t }}</h3>
+          <p>{{ strings.s1_d }}</p>
+        </li>
+        <li class="service">
+          <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/></svg></span>
+          <h3>{{ strings.s2_t }}</h3>
+          <p>{{ strings.s2_d }}</p>
+        </li>
+        <li class="service">
+          <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M21 4 3 11l6.5 2.5L12 20l3-4.5L21 4Z"/><path d="m9.5 13.5 5-4"/></svg></span>
+          <h3>{{ strings.s3_t }}</h3>
+          <p>{{ strings.s3_d }}</p>
+        </li>
+        <li class="service">
+          <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6"/></svg></span>
+          <h3>{{ strings.s4_t }}</h3>
+          <p>{{ strings.s4_d }}</p>
+        </li>
+      </ul>
+    </div>
+  </section>
 
-    <section class="block" id="projects" aria-labelledby="projects-title">
-      <h2 class="label" id="projects-title">{{ strings.projects_title }}</h2>
+  <section class="section" id="projects" aria-labelledby="projects-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow"><span>02</span>{{ strings.projects_eyebrow }}</p>
+        <h2 id="projects-title">{{ strings.projects_title }}</h2>
+        <p class="section-lead">{{ strings.projects_lead }}</p>
+      </header>
       <ul class="proj-list">
         {% for p in projects %}
           <li id="p-{{ p.slug }}">
@@ -42,14 +81,42 @@
           </li>
         {% endfor %}
       </ul>
-    </section>
+    </div>
+  </section>
 
-    <section class="block contact" id="contact" aria-labelledby="contact-title">
-      <h2 id="contact-title">{{ strings.contact_title }}</h2>
-      <p>{{ strings.contact_desc }}</p>
-      <div class="actions">
-        {% if telegram_url %}<a class="btn btn-primary" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
-        {% if contact_email %}<a class="email" href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% endif %}
+  <section class="section" id="about" aria-labelledby="about-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow"><span>03</span>{{ strings.about_eyebrow }}</p>
+        <h2 id="about-title">{{ strings.about_title }}</h2>
+      </header>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>{{ strings.about_p1 }}</p>
+          <p>{{ strings.about_p2 }}</p>
+        </div>
+        <dl class="facts">
+          <div><dt>{{ strings.fact_focus_label }}</dt><dd>{{ strings.fact_focus_value }}</dd></div>
+          <div><dt>{{ strings.fact_location_label }}</dt><dd>{{ strings.fact_location_value }}</dd></div>
+          <div><dt>{{ strings.fact_format_label }}</dt><dd>{{ strings.fact_format_value }}</dd></div>
+          <div><dt>{{ strings.fact_stack_label }}</dt><dd><ul class="stack">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul></dd></div>
+        </dl>
       </div>
-    </section>
+    </div>
+  </section>
+
+  <section class="section" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <div class="contact-card">
+        <p class="eyebrow"><span>04</span>{{ strings.contact_eyebrow }}</p>
+        <h2 id="contact-title">{{ strings.contact_title }}</h2>
+        <p class="section-lead">{{ strings.contact_desc }}</p>
+        <div class="actions">
+          {% if telegram_url %}<a class="btn btn-primary btn-lg" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
+          {% if contact_email %}<span class="contact-or">{{ strings.contact_or }}</span><a class="email" href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% endif %}
+        </div>
+        {% if social_links %}<nav class="socials" aria-label="{{ strings.socials_label }}">{% include "portfolio/_socials.html" %}</nav>{% endif %}
+      </div>
+    </div>
+  </section>
 {% endblock %}
