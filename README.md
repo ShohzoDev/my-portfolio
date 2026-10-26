@@ -12,20 +12,18 @@ with JavaScript turned off.
 
 ## What's inside
 
-- **Short home page, deep case studies.** Four sections (hero, selected
-  work, about, contact). Each featured project gets its own page at
-  `/<lang>/work/<slug>/` with the problem, solution, key engineering
-  decisions and result. Those pages are the links I send to clients.
+- **One short page.** Four sections: hero, projects, about, contact. Every
+  project already has its own live site, so the portfolio lists them as a
+  directory of links (name, one line, domain) instead of re-describing them.
 - **Interactive architecture diagram** in the hero, drawn as inline SVG.
   Hover or arrow-key through the nodes to see what each component does.
   The diagram is a single Tab stop with roving focus, and phones get a
   separate vertical drawing.
 - **One URL per language** (`/uz/`, `/ru/`, `/en/`) with `hreflang`,
-  canonical links, a sitemap covering every case page, and JSON-LD
-  (`Person`, `CreativeWork`).
+  canonical links, a sitemap and JSON-LD (`Person`).
 - **Everything editable in the admin:** owner name and About text
-  (`SiteProfile`), projects with 3-language case-study fields, and social
-  links. Social links without a URL stay hidden.
+  (`SiteProfile`), projects (name, one-line description, link) in three
+  languages, and social links. Social links without a URL stay hidden.
 - **Contact form:**
   - works without JS, with an AJAX upgrade when JS is available;
   - honeypot plus per-IP and global hourly limits, counted in the
@@ -42,16 +40,12 @@ with JavaScript turned off.
   - self-hosted variable fonts (IBM Plex) with only the needed unicode
     subsets;
   - AVIF/WebP photos and WhiteNoise compressed, hashed static files;
-  - uploaded project covers are re-encoded to 1600 px WebP with EXIF
-    stripped.
   - Lighthouse (production mode): 99–100 performance and 100 for
     accessibility, best practices and SEO.
 
-![Case study page](docs/screenshot-case.jpg)
-
 ## Stack
 
-Python · Django 5.2 · SQLite or PostgreSQL · WhiteNoise · Pillow · vanilla JS · hand-written CSS
+Python · Django 5.2 · SQLite or PostgreSQL · WhiteNoise · vanilla JS · hand-written CSS
 
 ## Run locally
 
@@ -79,11 +73,11 @@ The suite covers:
 
 - routing and language detection;
 - SEO output (hreflang, canonical, JSON-LD, sitemap);
-- case pages and the content migrations;
+- the project list and the content migrations;
 - the contact form: validation, honeypot, rate limits and proxy-header
   spoofing;
 - CSP and inline-script hash consistency;
-- admin login throttling and cover image compression.
+- admin login throttling.
 
 GitHub Actions runs it on every push.
 

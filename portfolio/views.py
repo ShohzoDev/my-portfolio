@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 from django.conf import settings
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
@@ -106,8 +106,8 @@ def _localized_projects(lang):
 def _commands(strings, lang, projects, email, github_url, alternates, on_home):
     """⌘K palette entries, already translated — the JS just filters/executes.
 
-    On the home page sections scroll in place; on a case page the same
-    entries navigate back to the home page section.
+    On the home page sections scroll in place; elsewhere the same entries
+    navigate back to the home page section. Projects open their own sites.
     """
     home = f"/{lang}/"
 
@@ -126,12 +126,7 @@ def _commands(strings, lang, projects, email, github_url, alternates, on_home):
         )
     ]
     for p in projects:
-        if p["has_case"]:
-            commands.append(
-                {"group": strings["cmdk_group_projects"], "label": p["title"], "kind": "href",
-                 "href": reverse("portfolio:case", args=[lang, p["slug"]])}
-            )
-        elif p["link"]:
+        if p["link"]:
             commands.append(
                 {"group": strings["cmdk_group_projects"], "label": p["title"], "kind": "href",
                  "href": p["link"], "external": True}
@@ -218,15 +213,14 @@ def _home_context(request, lang, form=None, sent=False):
     now_text = (getattr(profile, f"now_{lang}", "") or "").strip()
     now_url = ""
     if now_text and profile.now_project_id:
-        target = next((p for p in projects if p["slug"] == profile.now_project.slug and p["has_case"]), None)
+        target = next((p for p in projects if p["slug"] == profile.now_project.slug), None)
         if target:
-            now_url = reverse("portfolio:case", args=[lang, target["slug"]])
+            now_url = target["link"]
     context.update(
         {
             "now_text": now_text or strings["fact_status_value"],
             "now_url": now_url,
-            "featured_projects": [p for p in projects if p["tier"] == Project.Tier.FEATURED],
-            "other_projects": [p for p in projects if p["tier"] != Project.Tier.FEATURED],
+            "projects": projects,
             "skills": skills,
             "about_paragraphs": context["profile"].about_paragraphs(lang),
             "how_items": [
@@ -253,43 +247,6 @@ def _remember_language(response, lang):
 def index(request, lang):
     context = _home_context(request, lang, sent=request.GET.get("sent") == "1")
     return _remember_language(render(request, "portfolio/index.html", context), lang)
-
-
-@require_GET
-def case_detail(request, lang, slug):
-    projects = _localized_projects(lang)
-    project = next((p for p in projects if p["slug"] == slug and p["has_case"]), None)
-    if project is None:
-        raise Http404("No case study for this project")
-
-    context = _base_context(
-        request, lang, lambda code: reverse("portfolio:case", args=[code, slug]), on_home=False, projects=projects
-    )
-    strings = context["strings"]
-    cases = [p for p in projects if p["has_case"]]
-    next_project = cases[(cases.index(project) + 1) % len(cases)] if len(cases) > 1 else None
-    work = {
-        "@context": "https://schema.org",
-        "@type": "CreativeWork",
-        "name": project["title"],
-        "description": project["desc"],
-        "url": context["canonical_url"],
-        "inLanguage": lang,
-        "keywords": ", ".join(project["tags"]),
-        "author": {"@type": "Person", "name": context["profile"].full_name, "url": request.build_absolute_uri(f"/{lang}/")},
-    }
-    if project["link"]:
-        work["sameAs"] = project["link"]
-    context.update(
-        {
-            "project": project,
-            "next_project": next_project,
-            "page_title": f"{project['title']} — {context['profile'].full_name}",
-            "page_description": project["desc"],
-            "jsonld": _json_for_script(work),
-        }
-    )
-    return _remember_language(render(request, "portfolio/case.html", context), lang)
 
 
 # ---------------------------------------------------------------------------
@@ -364,23 +321,16 @@ def robots_txt(request):
 
 @require_GET
 def sitemap_xml(request):
-    """Home page + every case-study page, each in 3 languages with hreflang."""
-    pages = [(lambda code: f"/{code}/", True)]
-    for slug in [p.slug for p in Project.objects.filter(is_active=True) if p.has_case]:
-        pages.append((lambda code, slug=slug: reverse("portfolio:case", args=[code, slug]), False))
-
-    entries = ""
-    for path_for, is_home in pages:
-        urls = {code: request.build_absolute_uri(path_for(code)) for code in SUPPORTED_LANGUAGES}
-        alternates = "".join(
-            f'    <xhtml:link rel="alternate" hreflang="{code}" href="{url}"/>\n' for code, url in urls.items()
-        )
-        if is_home:
-            alternates += f'    <xhtml:link rel="alternate" hreflang="x-default" href="{request.build_absolute_uri("/")}"/>\n'
-        entries += "".join(
-            f"  <url>\n    <loc>{url}</loc>\n{alternates}    <changefreq>monthly</changefreq>\n  </url>\n"
-            for url in urls.values()
-        )
+    """The home page in 3 languages, each listing the others via hreflang."""
+    urls = {code: request.build_absolute_uri(f"/{code}/") for code in SUPPORTED_LANGUAGES}
+    alternates = "".join(
+        f'    <xhtml:link rel="alternate" hreflang="{code}" href="{url}"/>\n' for code, url in urls.items()
+    )
+    alternates += f'    <xhtml:link rel="alternate" hreflang="x-default" href="{request.build_absolute_uri("/")}"/>\n'
+    entries = "".join(
+        f"  <url>\n    <loc>{url}</loc>\n{alternates}    <changefreq>monthly</changefreq>\n  </url>\n"
+        for url in urls.values()
+    )
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '

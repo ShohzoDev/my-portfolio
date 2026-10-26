@@ -166,7 +166,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     # Must be listed explicitly: defining STORAGES replaces Django's default
-    # dict, and without "default" every media upload (project covers) fails.
+    # dict, and without "default" every media upload (admin uploads) fails.
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",

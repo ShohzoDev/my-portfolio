@@ -1,0 +1,21 @@
+Sen tajribali product dizayner va senior frontend muhandissan. Ilova qilingan skrinshotlar mening shaxsiy portfolio saytim (shohzodev.uz, hali deploy qilinmagan).
+
+Kontekst:
+- Men Django backend muhandisiman (O'zbekiston). Sayt maqsadi: 1) IT ta'lim markaziga ishga arizada ko'rsatish, 2) mahalliy biznes mijozlar topish.
+- Texnologiya: Django server-side render, oddiy CSS/JS (React yo'q), 3 til (uz/ru/en). O'zbekcha sahifa yangi lotin alifbosida (Ş, Ç, Ö, Ğ).
+- Tuzilma: qisqa bosh sahifa (hero + arxitektura diagrammasi, tanlangan 3 ish, men haqimda, aloqa) va har bir asosiy loyiha uchun alohida case-study sahifa.
+- Ranglar ataylab tanlangan: qorong'i fon #0d1117, ko'k aksent #4c9aff, IBM Plex shriftlari.
+- Loyihalarning skrinshotlari hali qo'yilmagan.
+
+Skrinshotlar:
+01 — desktop hero, 02 — desktop bosh sahifa to'liq, 03 — diagramma (hover holati),
+04 — case-study sahifa (desktop), 05 — o'zbekcha hero, 06 — mobil hero,
+07 — mobil bosh sahifa (4 bo'lakka bo'lingan), 08 — mobil case-study (2 bo'lak).
+
+Vazifa:
+1. Har bir mezon bo'yicha 10 ballik baho ber va har birini 1–2 jumlada asosla: birinchi taassurot (5 soniya), vizual dizayn va ierarxiya, tipografiya, kontent va ishonchlilik, loyihalarni ko'rsatish, mobil ko'rinish, konversiya (meni yollash / bog'lanish).
+2. Bu saytni 10/10 dan ajratib turgan eng muhim 10 ta muammoni yoz — ta'siri bo'yicha tartibla. Har biri uchun: nima noto'g'ri, nega muhim, aniq qanday tuzatish kerak (CSS/maket darajasida).
+3. Agar faqat 3 ta narsani o'zgartirish mumkin bo'lsa — qaysilar?
+4. Shu uslubdagi (backend/Django muhandisi, qorong'i tema) 2–3 ta haqiqiy namuna portfolioni ayt va ulardan aynan nimani olish kerakligini yoz.
+
+Qoidalar: umumiy maslahat berma ("ko'proq rang qo'shing" emas — qayerga, qanday). Maqtovni qisqa qil, kamchiliklarga e'tibor ber. Ranglarni yoki texnologiyani butunlay almashtirishni taklif qilma — mavjud uslub ichida yaxshila. Javobni o'zbek tilida yoz.

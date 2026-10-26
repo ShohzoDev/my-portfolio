@@ -17,6 +17,6 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    # Uploaded project covers in local development. In production nginx (or
+    # Uploaded media files in local development. In production nginx (or
     # PythonAnywhere's "Static files" tab) serves /media/ directly.
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -7,7 +7,7 @@ Convert Uzbek Latin text to the updated alphabet (28 letters, 2026 reform):
 stays an apostrophe.
 
 Proper names are left as they are: project and brand names (Oqqushlar,
-oqqushlar.uz, ShohzoDev, BuildOps...), the owner's name, domains, and
+oqqushlar.uz, ShohzoDev, BuildBest...), the owner's name, domains, and
 English/technical terms (schema-per-tenant, health-check). CamelCase words,
 anything with a digit or a dot inside, and words in PROTECTED are skipped.
 """

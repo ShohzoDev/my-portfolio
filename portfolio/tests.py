@@ -39,43 +39,50 @@ class SocialLinkModelTests(TestCase):
 
 
 class ProjectModelTests(TestCase):
-    def test_content_migration_sets_up_compact_lineup(self):
-        featured = list(
-            Project.objects.filter(is_active=True, tier=Project.Tier.FEATURED).values_list("slug", flat=True)
+    def test_content_migration_sets_up_link_list(self):
+        listed = list(Project.objects.filter(is_active=True).values_list("slug", "link"))
+        self.assertEqual(
+            listed,
+            [
+                ("zebest", "https://zebest.uz"),
+                ("buildbest", "https://buildbest.uz"),
+                ("oqqushlar", "https://oqqushlar.uz"),
+                ("geodezistman", "https://geodezistman.uz"),
+                ("roma-food", "https://romafood.pythonanywhere.com"),
+            ],
         )
-        self.assertEqual(featured, ["buildops", "oqqushlar", "zebest"])
-        for slug in featured:
-            self.assertTrue(Project.objects.get(slug=slug).has_case, slug)
-        self.assertFalse(Project.objects.filter(slug="eltaom").exists())  # renamed to Zebest
-        self.assertFalse(Project.objects.get(slug="geo-portfolio").is_active)
-        self.assertEqual(Project.objects.get(slug="buildops").link, "")  # client site not published
+        self.assertFalse(Project.objects.filter(slug__in=("buildops", "eltaom")).exists())  # renamed
+        for slug in ("lingvoapp", "english-bot", "n8n-workflows", "geo-portfolio"):
+            self.assertFalse(Project.objects.get(slug=slug).is_active, slug)
+        self.assertTrue(Project.objects.get(slug="zebest").is_founder)
         self.assertEqual(SiteProfile.objects.count(), 1)
 
-    def test_every_project_is_translated(self):
-        for p in Project.objects.all():
+    def test_every_project_is_translated_in_one_line(self):
+        for p in Project.objects.filter(is_active=True):
             for lang in SUPPORTED_LANGUAGES:
                 with self.subTest(project=p.slug, lang=lang):
                     self.assertTrue(getattr(p, f"title_{lang}"))
-                    self.assertTrue(getattr(p, f"desc_{lang}"))
+                    desc = getattr(p, f"desc_{lang}")
+                    self.assertTrue(desc)
+                    self.assertLessEqual(len(desc), 90)  # one line, not a paragraph
+                    self.assertNotIn("\n", desc)
 
-    def test_localized_and_tag_list(self):
-        p = Project.objects.get(slug="buildops")
-        data = p.localized("en")
-        self.assertEqual(data["title"], p.title_en)
-        self.assertIn("Django", data["tags"])
-        self.assertEqual(len(data["highlights"]), 6)
-        self.assertEqual(len(data["facts"]), 3)
-        self.assertEqual(len(data["solution"]), 3)  # blank-line separated paragraphs
-        self.assertEqual(data["cover"], "")
+    def test_domain_is_what_the_visitor_reads(self):
+        cases = {
+            "https://zebest.uz": "zebest.uz",
+            "https://www.Oqqushlar.uz/": "oqqushlar.uz",
+            "http://app.buildbest.uz:8000/login/?next=/": "app.buildbest.uz",
+            "": "",
+        }
+        for link, domain in cases.items():
+            self.assertEqual(Project(link=link).domain, domain, link)
 
-    def test_every_case_is_fully_translated(self):
-        for p in Project.objects.filter(is_active=True):
-            if not p.has_case:
-                continue
-            for lang in SUPPORTED_LANGUAGES:
-                for field in ("facts", "problem", "solution", "result", "highlights"):
-                    with self.subTest(project=p.slug, lang=lang, field=field):
-                        self.assertTrue(getattr(p, f"{field}_{lang}").strip())
+    def test_localized(self):
+        data = Project.objects.get(slug="buildbest").localized("ru")
+        self.assertEqual(data["title"], "BuildBest")
+        self.assertEqual(data["domain"], "buildbest.uz")
+        self.assertIn("строительных", data["desc"])
+        self.assertEqual(set(data), {"slug", "title", "desc", "status", "is_founder", "link", "domain"})
 
 
 class ContentTests(TestCase):
@@ -161,31 +168,50 @@ class IndexPageTests(TestCase):
 
     def test_content_is_server_rendered(self):
         html = self.get()
-        self.assertIn("BuildOps", html)
+        self.assertIn("BuildBest", html)
+        self.assertNotIn("BuildOps", html)
         self.assertIn("Django backend muhandisiman", html)  # About text from SiteProfile
 
-    def test_project_tiers_render_in_their_sections(self):
+    def test_projects_are_rows_linking_to_their_sites(self):
         html = self.get("en")
-        work = html[html.index('class="work-grid"'):html.index('class="other-list"')]
-        for slug in ("buildops", "oqqushlar", "zebest"):
-            self.assertIn(f'id="p-{slug}"', work)
-            self.assertIn(f'href="/en/work/{slug}/"', work)
-        other = html[html.index('class="other-list"'):]
-        for slug in ("roma-food", "geodezistman", "lingvoapp", "english-bot", "n8n-workflows"):
-            self.assertIn(f'id="p-{slug}"', other)
+        section = html[html.index('id="projects"'):html.index('id="about"')]
+        rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="proj-row" href="([^"]+)" target="_blank" rel="noopener">', section)
+        self.assertEqual(
+            rows,
+            [
+                ("zebest", "https://zebest.uz"),
+                ("buildbest", "https://buildbest.uz"),
+                ("oqqushlar", "https://oqqushlar.uz"),
+                ("geodezistman", "https://geodezistman.uz"),
+                ("roma-food", "https://romafood.pythonanywhere.com"),
+            ],
+        )
+        for domain in ("zebest.uz", "buildbest.uz", "oqqushlar.uz", "geodezistman.uz"):
+            self.assertIn(f"<span>{domain}</span>", section)
+        self.assertNotIn("https://", re.sub(r'href="[^"]+"', "", section))  # domains shown bare
+        self.assertNotIn("/work/", html)  # no case-study pages any more
         self.assertNotIn("p-geo-portfolio", html)
-        self.assertNotIn("Eltaom", html)
+        self.assertNotIn("p-lingvoapp", html)
+
+    def test_project_without_site_is_not_a_link(self):
+        Project.objects.filter(slug="lingvoapp").update(is_active=True)
+        html = self.get("en")
+        row = html[html.index('id="p-lingvoapp"'):]
+        row = row[:row.index("</li>")]
+        self.assertIn('<div class="proj-row">', row)
+        self.assertIn(STRINGS["en"]["status_dev"], row)  # non-live status is spelled out
+        self.assertNotIn("href=", row)
 
     def test_badge_counts_only_live_projects(self):
         live = Project.objects.filter(is_active=True, status=Project.Status.LIVE).count()
         html = self.get("ru")
         self.assertIn(f"{live} — {STRINGS['ru'][plural_key('ru', live)]}", html)
-        self.assertEqual(live, 4)
+        self.assertEqual(live, 5)
         self.assertIn(STRINGS["ru"][plural_key("ru", live)], html)
 
     def test_inactive_project_is_hidden(self):
-        Project.objects.filter(slug="lingvoapp").update(is_active=False)
-        self.assertNotIn('id="p-lingvoapp"', self.get())
+        Project.objects.filter(slug="roma-food").update(is_active=False)
+        self.assertNotIn('id="p-roma-food"', self.get())
 
     def test_only_linked_social_icons_are_shown(self):
         html = self.get()
@@ -235,6 +261,10 @@ class IndexPageTests(TestCase):
         self.assertEqual(kinds, {"scroll", "href", "copy"})
         current = [c for c in commands if c.get("current")]
         self.assertEqual([c["href"] for c in current], ["/en/"])
+        projects = [c for c in commands if c["group"] == STRINGS["en"]["cmdk_group_projects"]]
+        self.assertEqual(projects[0], {"group": STRINGS["en"]["cmdk_group_projects"], "label": "Zebest",
+                                       "kind": "href", "href": "https://zebest.uz", "external": True})
+        self.assertEqual(len(projects), 5)
 
     def test_redesign_sections_render(self):
         for lang in SUPPORTED_LANGUAGES:
@@ -264,15 +294,12 @@ class IndexPageTests(TestCase):
     def test_zebest_founder_and_now_status(self):
         for lang in SUPPORTED_LANGUAGES:
             html = self.get(lang)
-            card = html[html.index('id="p-zebest"'):]
-            card = card[:card.index("</article>")]
-            self.assertIn(STRINGS[lang]["founder_label"], card)
-            self.assertIn(f'<a class="status-pill" href="/{lang}/work/zebest/">', html)
-        buildops = html[html.index('id="p-buildops"'):]
-        self.assertNotIn("founder-tag", buildops[:buildops.index("</article>")])
-        case = self.client.get("/en/work/zebest/").content.decode()
-        self.assertIn(STRINGS["en"]["case_role_founder"], case)
-        self.assertIn("about to launch", case)
+            row = html[html.index('id="p-zebest"'):]
+            self.assertIn(STRINGS[lang]["founder_label"], row[:row.index("</li>")])
+            self.assertIn('<a class="status-pill" href="https://zebest.uz">', html)
+        row = html[html.index('id="p-buildbest"'):]
+        self.assertNotIn("founder-tag", row[:row.index("</li>")])
+        self.assertIn("Now: building Zebest", self.get("en"))
 
     def test_now_status_falls_back_when_empty(self):
         SiteProfile.objects.update(now_uz="", now_project=None)
@@ -287,9 +314,7 @@ class IndexPageTests(TestCase):
         for lang in SUPPORTED_LANGUAGES:
             self.assertIn(f"<loc>http://testserver/{lang}/</loc>", sitemap)
         self.assertIn('hreflang="x-default"', sitemap)
-        for lang in SUPPORTED_LANGUAGES:
-            self.assertIn(f"<loc>http://testserver/{lang}/work/buildops/</loc>", sitemap)
-        self.assertNotIn("/work/roma-food/", sitemap)
+        self.assertEqual(sitemap.count("<loc>"), 3)
 
 
 @override_settings(STORAGES=_TEST_STORAGES, CONTACT_RATE_LIMIT_PER_HOUR=3)
@@ -432,59 +457,18 @@ class ContactFormTests(TestCase):
 
 
 @override_settings(STORAGES=_TEST_STORAGES)
-class CaseStudyPageTests(TestCase):
-    def test_case_pages_render_in_every_language(self):
-        for slug in ("buildops", "oqqushlar", "zebest"):
-            p = Project.objects.get(slug=slug)
-            for lang in SUPPORTED_LANGUAGES:
-                with self.subTest(slug=slug, lang=lang):
-                    response = self.client.get(f"/{lang}/work/{slug}/")
-                    self.assertEqual(response.status_code, 200)
-                    html = response.content.decode()
-                    self.assertIn(f'<html lang="{lang}">', html)
-                    self.assertIn(f'<link rel="canonical" href="http://testserver/{lang}/work/{slug}/">', html)
-                    for code in SUPPORTED_LANGUAGES:
-                        self.assertIn(f'hreflang="{code}" href="http://testserver/{code}/work/{slug}/"', html)
-                    self.assertIn(STRINGS[lang]["case_solution"], html)
-                    first_para = getattr(p, f"problem_{lang}").split("\n\n")[0][:40]
-                    self.assertIn(first_para.replace("'", "&#x27;"), html)
-                    self.assertIn('property="og:type" content="article"', html)
-
-    def test_next_project_cycles(self):
-        html = self.client.get("/en/work/zebest/").content.decode()
-        self.assertIn('class="case-next" href="/en/work/buildops/"', html)
-
-    def test_project_without_case_is_404(self):
-        self.assertEqual(self.client.get("/uz/work/roma-food/").status_code, 404)
-        self.assertEqual(self.client.get("/uz/work/does-not-exist/").status_code, 404)
-
-    def test_case_needs_all_three_languages(self):
-        Project.objects.filter(slug="zebest").update(problem_en="", solution_en="")
-        self.assertFalse(Project.objects.get(slug="zebest").has_case)
+class ErrorPageTests(TestCase):
+    def test_old_case_study_urls_are_gone(self):
         self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)
-        self.assertNotIn("/work/zebest/", self.client.get("/sitemap.xml").content.decode())
 
     @override_settings(DEBUG=False)
     def test_error_pages_have_no_inline_styles(self):
-        response = self.client.get("/uz/work/does-not-exist/")
+        response = self.client.get("/uz/does-not-exist/")
         self.assertEqual(response.status_code, 404)
         html = response.content.decode()
         self.assertNotIn("<style", html)
         self.assertIn('href="/static/portfolio/css/error.css"', html)
         self.assertIn("Content-Security-Policy", response)
-
-    def test_inactive_case_is_404(self):
-        Project.objects.filter(slug="zebest").update(is_active=False)
-        self.assertEqual(self.client.get("/uz/work/zebest/").status_code, 404)
-
-    def test_case_page_nav_points_back_home(self):
-        html = self.client.get("/ru/work/buildops/").content.decode()
-        self.assertIn('href="/ru/#about"', html)
-        self.assertIn('href="/en/work/buildops/" hreflang="en"', html)  # language switch keeps the page
-        commands = json.loads(
-            re.search(r'<script id="cmdk-commands" type="application/json">(.*?)</script>', html, re.S).group(1)
-        )
-        self.assertNotIn("scroll", {c["kind"] for c in commands})
 
 
 @override_settings(STORAGES=_TEST_STORAGES)
@@ -544,87 +528,6 @@ class SecurityTests(TestCase):
         self.assertEqual([w.id for w in contact_email_configured(None)], ["portfolio.W001"])
 
 
-class CoverCompressionTests(TestCase):
-    def setUp(self):
-        import tempfile
-
-        self.media = tempfile.mkdtemp()
-        self.override = override_settings(MEDIA_ROOT=self.media)
-        self.override.enable()
-
-    def tearDown(self):
-        import shutil
-
-        self.override.disable()
-        shutil.rmtree(self.media, ignore_errors=True)
-
-    def test_large_upload_becomes_small_webp(self):
-        import io
-
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        from PIL import Image
-
-        buffer = io.BytesIO()
-        Image.new("RGB", (3200, 2000), (40, 90, 160)).save(buffer, "PNG")
-        p = Project.objects.get(slug="buildops")
-        p.cover = SimpleUploadedFile("shot.png", buffer.getvalue(), content_type="image/png")
-        p.save()
-        p.refresh_from_db()
-        self.assertTrue(p.cover.name.endswith(".webp"), p.cover.name)
-        with Image.open(p.cover.path) as img:
-            self.assertEqual(img.format, "WEBP")
-            self.assertEqual(img.size, (1600, 1000))
-
-        # Saving again without a new upload must not re-encode.
-        self._assert_second_save_keeps(p)
-
-    def _upload(self, img, fmt="PNG", name="shot.png"):
-        import io
-
-        from django.core.files.uploadedfile import SimpleUploadedFile
-
-        buffer = io.BytesIO()
-        img.save(buffer, fmt)
-        p = Project.objects.get(slug="oqqushlar")
-        p.cover = SimpleUploadedFile(name, buffer.getvalue())
-        p.save()
-        p.refresh_from_db()
-        return p
-
-    def test_very_tall_screenshot_is_scaled_not_crashing(self):
-        from PIL import Image
-
-        p = self._upload(Image.new("RGB", (1440, 18000), "white"))
-        with Image.open(p.cover.path) as img:
-            self.assertEqual(img.format, "WEBP")
-            self.assertLessEqual(img.height, 16383)
-
-    def test_palette_png_keeps_transparency(self):
-        from PIL import Image
-
-        img = Image.new("P", (200, 100), 0)
-        img.putpalette([0, 0, 0, 255, 0, 0] + [0] * 762)
-        img.info["transparency"] = 0
-        p = self._upload(img)
-        with Image.open(p.cover.path) as out:
-            self.assertEqual(out.mode, "RGBA")
-
-    def test_non_image_is_left_alone(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
-
-        p = Project.objects.get(slug="oqqushlar")
-        p.cover = SimpleUploadedFile("notes.png", b"not an image")
-        p.save()  # must not raise
-        self.assertTrue(p.cover.name.endswith(".png"))
-
-    def _assert_second_save_keeps(self, p):
-        name = p.cover.name
-        p.title_en = "BuildOps"
-        p.save()
-        p.refresh_from_db()
-        self.assertEqual(p.cover.name, name)
-
-
 class UzbekAlphabetTests(TestCase):
     def test_converter(self):
         from .uz_alphabet import to_new_latin as t
@@ -646,7 +549,7 @@ class UzbekAlphabetTests(TestCase):
 
         from .uz_alphabet import to_new_latin
 
-        for path in ("/uz/", "/uz/work/buildops/", "/uz/work/oqqushlar/", "/uz/work/zebest/"):
+        for path in ("/uz/",):
             page = self.client.get(path).content.decode()
             text = html_lib.unescape(re.sub(r"<script.*?</script>|<style.*?</style>|<[^>]+>", " ", page, flags=re.S))
             for word in re.findall(r"[^\s«»\"()\[\],;:!?—–/|·]+", text):
@@ -657,7 +560,7 @@ class UzbekAlphabetTests(TestCase):
 
     @override_settings(STORAGES=_TEST_STORAGES)
     def test_russian_and_english_are_untouched(self):
-        self.assertIn(STRINGS["en"]["case_task"], self.client.get("/en/work/buildops/").content.decode())
+        self.assertIn(STRINGS["en"]["projects_lead"], self.client.get("/en/").content.decode())
         self.assertNotIn("ş", STRINGS["en"]["hero_tagline"] + STRINGS["ru"]["hero_tagline"])
 
 class BlankEnvSettingsTests(TestCase):

@@ -22,41 +22,23 @@
   <section id="projects" class="section">
     <div class="container">
       <h2 class="section-title reveal">{{ strings.projects_title }}</h2>
+      <p class="section-lead reveal">{{ strings.projects_lead }}</p>
 
-      {% if featured_projects %}
-      <div class="work-grid">
-        {% for p in featured_projects %}
-          <article class="work-card reveal" id="p-{{ p.slug }}">
-            <p class="work-tags"><span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% if p.is_founder %}<span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}</p>
-            <h3 class="work-title">{% if p.has_case %}<a href="{% url 'portfolio:case' lang p.slug %}">{{ p.title }}</a>{% else %}{{ p.title }}{% endif %}</h3>
-            <p class="work-desc">{{ p.desc }}</p>
-            {% if p.facts %}<ul class="work-facts">{% for f in p.facts %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
-            <div class="work-links">
-              {% if p.has_case %}<a class="link-more" href="{% url 'portfolio:case' lang p.slug %}">{{ strings.case_more }}<span class="visually-hidden">: {{ p.title }}</span> <span aria-hidden="true">→</span></a>{% endif %}
-              {% if p.link %}<a class="link-ext" href="{{ p.link }}" target="_blank" rel="noopener">{{ strings.project_link }} <span aria-hidden="true">↗</span></a>{% endif %}
-              {% if p.github %}<a class="link-ext" href="{{ p.github }}" target="_blank" rel="noopener">{{ strings.project_code }} <span aria-hidden="true">↗</span></a>{% endif %}
-            </div>
-          </article>
+      <ul class="proj-list reveal">
+        {% for p in projects %}
+          <li id="p-{{ p.slug }}">
+            {% if p.link %}<a class="proj-row" href="{{ p.link }}" target="_blank" rel="noopener">{% else %}<div class="proj-row">{% endif %}
+              <span class="proj-mark" aria-hidden="true">{{ p.title|first|upper }}</span>
+              <span class="proj-main">
+                <span class="proj-head"><span class="proj-name">{{ p.title }}</span>{% if p.is_founder %}<span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}{% if p.status != "live" %}<span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% endif %}</span>
+                <span class="proj-desc">{{ p.desc }}</span>
+              </span>
+              {% if p.domain %}<span class="proj-domain">{% if p.status == "live" %}<span class="dot" aria-hidden="true"></span>{% endif %}<span>{{ p.domain }}</span></span>{% else %}<span class="proj-domain"></span>{% endif %}
+              {% if p.link %}<span class="proj-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> ({{ strings.opens_new_tab }})</span>{% endif %}
+            {% if p.link %}</a>{% else %}</div>{% endif %}
+          </li>
         {% endfor %}
-      </div>
-      {% endif %}
-
-      {% if other_projects %}
-      <div class="other-work reveal">
-        <h3 class="other-title">{{ strings.projects_other_title }}</h3>
-        <ul class="other-list">
-          {% for p in other_projects %}
-            <li class="other-item" id="p-{{ p.slug }}">
-              <p class="other-main"><strong>{{ p.title }}</strong> <span class="other-desc">{{ p.desc }}</span></p>
-              <p class="other-meta">
-                <span class="other-tags">{{ p.tags|slice:":3"|join:" · " }}</span>
-                {% if p.link %}<a href="{{ p.link }}" target="_blank" rel="noopener" aria-label="{{ p.title }} — {{ strings.project_link }}">↗</a>{% elif p.github %}<a href="{{ p.github }}" target="_blank" rel="noopener" aria-label="{{ p.title }} — {{ strings.project_code }}">↗</a>{% endif %}
-              </p>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-      {% endif %}
+      </ul>
     </div>
   </section>
 

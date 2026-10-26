@@ -4,10 +4,10 @@
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
 `/uz/`, `/ru/`, `/en/`), "Blueprint" uslubida. Bosh sahifa qisqa — 4 bo'lim:
-hero (interaktiv arxitektura diagrammasi bilan), tanlangan ishlar, men
-haqimda, aloqa. Har bir asosiy loyihaning alohida case-study sahifasi bor
-(`/uz/work/buildops/`) — mijozga shu havolani yuborasiz. JavaScript
-o'chirilgan holatda ham to'liq ishlaydi.
+hero (interaktiv arxitektura diagrammasi bilan), loyihalar, men haqimda,
+aloqa. Har bir loyihaning o'z sayti bor, shuning uchun portfolio ularni
+havolalar ro'yxati sifatida ko'rsatadi: nomi, bir qatorli tavsif va domeni.
+JavaScript o'chirilgan holatda ham to'liq ishlaydi.
 
 ## Tuzilishi
 
@@ -17,12 +17,12 @@ portfolio/
   models.py                — SiteProfile, SocialLink, Project, ContactMessage, LoginFailure
   admin.py                 — admin panel
   content.py               — interfeys matnlari va ko'nikmalar (UZ/RU/EN)
-  views.py                 — bosh sahifa, case sahifa, til yo'naltirish, aloqa formasi, robots/sitemap
+  views.py                 — bosh sahifa, til yo'naltirish, aloqa formasi, robots/sitemap
   security.py              — CSP sarlavhalari, admin login cheklovi, IP hash
   forms.py                 — aloqa formasi (+ spam-tuzoq)
   notifications.py         — yangi xabarni Telegramga yuborish
   tests.py                 — avtomatik testlar
-templates/portfolio/       — base.html, index.html, case.html + qismlar (_diagram, _socials)
+templates/portfolio/       — base.html, index.html + qismlar (_diagram, _socials)
 static/portfolio/          — css, js, rasmlar, o'z serverimizdagi shriftlar
 ```
 
@@ -31,15 +31,11 @@ static/portfolio/          — css, js, rasmlar, o'z serverimizdagi shriftlar
 - **Ism va "Men haqimda" matni** — admin panel → *Sayt profili*. 3 tilda,
   bo'sh qator — yangi xatboshi. Ism sarlavhada, Google ma'lumotlarida va
   sahifa nomida ishlatiladi.
-- **Loyihalar** — admin panel → *Loyihalar*:
-  - *Tanlangan — karta*: bosh sahifadagi 3 ta asosiy karta (3 tadan
-    oshirmang). Kartada qisqa tavsif (bitta jumla) va 3 tagacha "raqam"
-    (`258 test`, `8 til`) ko'rinadi.
-  - *Boshqa ishlar*: pastdagi bir qatorli ro'yxat.
-  - *Case sahifasi* bloklari (vazifa, yechim, natija, asosiy yechimlar)
-    to'ldirilsa, loyiha uchun alohida sahifa ochiladi va kartada
-    «Batafsil» havolasi chiqadi. Muqova rasmi yuklansa, avtomatik 1600px
-    WebP'ga siqiladi va case sahifasida ko'rinadi.
+- **Loyihalar** — admin panel → *Loyihalar*. Har biri uchun: nomi, bir
+  qatorli tavsif (3 tilda), sayt havolasi, holat va tartib. Butun qator
+  saytga olib boradi, havola esa domen ko'rinishida chiqadi
+  (`https://www.zebest.uz/` → `zebest.uz`). «Ishlamoqda»dan boshqa holat
+  nom yonida yoziladi; «Men asoschiman» belgilansa — «Asoschi» belgisi.
 - **Ijtimoiy tarmoqlar** — admin panel → *Ijtimoiy tarmoqlar*. Faqat URL
   kiritilganlari saytda ko'rinadi. **Telegram** URL'i kiritilsa, u
   saytdagi asosiy "Telegram orqali yozish" tugmasiga aylanadi.
@@ -166,9 +162,8 @@ va `.env` da `CONTACT_TRUST_PROXY_HEADERS=True`.
 ## SEO
 
 Har bir til alohida URL'da, `hreflang` + `x-default`, kanonik havola,
-schema.org `Person` va case sahifalarda `CreativeWork` (JSON-LD),
-`/robots.txt`, `/sitemap.xml` (bosh sahifa + barcha case sahifalar, 3 tilda,
-alternativlari bilan). Ijtimoiy tarmoqda ulashish rasmi:
+schema.org `Person` (JSON-LD), `/robots.txt`, `/sitemap.xml` (bosh sahifa
+3 tilda, alternativlari bilan). Ijtimoiy tarmoqda ulashish rasmi:
 `static/portfolio/img/og-image.jpg` (1200×630).
 
 ## Shriftlar
