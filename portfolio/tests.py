@@ -178,6 +178,9 @@ class IndexPageTests(TestCase):
                 self.assertIn(strings[f"s{n}_t"].replace("'", "&#x27;"), html)
             self.assertNotIn("*", html[html.index('<div class="about">'):html.index('<ul class="chips">')])
             self.assertIn('<a href="https://zebest.uz" target="_blank" rel="noopener">Zebest</a>', html)
+            hero = html[html.index('<section class="hero"'):html.index('id="about"')]
+            self.assertIn('class="portrait"', hero)  # the face is in the first screen
+            self.assertIn(strings["fact_langs_value"].replace("'", "&#x27;"), html)
             for tool in STACK:
                 self.assertIn(f"<li>{tool}</li>", html)
             self.assertNotIn("{#", html)  # no leaked template syntax
@@ -193,10 +196,12 @@ class IndexPageTests(TestCase):
         for lang in SUPPORTED_LANGUAGES:
             page = self.get(lang)
             block = page[page.index('<pre class="code" id="code"><code>'):page.index("</code></pre>")]
-            lines = re.findall(r'<span class="ln">(.*?)</span>(?=<span class="ln">|$)', block + "", re.S)
+            lines = re.findall(r'<span class="ln(?: ln-extra)?">(.*?)</span>(?=<span class="ln|$)', block, re.S)
+            self.assertEqual(len(lines), 9)
             text = "\n".join(html_lib.unescape(re.sub(r"<[^>]+>", "", ln)) for ln in lines)
             self.assertIn('name     = "Shohzod"', text)
             self.assertIn(STRINGS[lang]["code_status"], text)
+            self.assertIn("return idea.to_production()", text)
             ast.parse(text)  # raises SyntaxError if the snippet is broken
 
     def test_assets_carry_a_cache_busting_version(self):

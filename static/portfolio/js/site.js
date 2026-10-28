@@ -14,7 +14,11 @@
     pre.style.minHeight = pre.offsetHeight + "px"; // no layout jump while typing
     var walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
     var nodes = [];
-    while (walker.nextNode()) nodes.push({ node: walker.currentNode, text: walker.currentNode.nodeValue });
+    while (walker.nextNode()) {
+      // lines hidden on small screens keep their text and are simply skipped
+      if (walker.currentNode.parentElement.getClientRects().length === 0) continue;
+      nodes.push({ node: walker.currentNode, text: walker.currentNode.nodeValue });
+    }
     nodes.forEach(function (n) { n.node.nodeValue = ""; });
     var caret = document.createElement("span");
     caret.className = "caret";

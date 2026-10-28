@@ -26,7 +26,7 @@ CONTENT_SECURITY_POLICY = "; ".join(
         "style-src 'self'",
         "img-src 'self' data:",
         "font-src 'self'",
-        "connect-src 'none'",
+        "connect-src 'self'",  # lets crawlers' audit tools fetch robots.txt from the page
         "form-action 'none'",
         "frame-ancestors 'none'",
         "base-uri 'self'",

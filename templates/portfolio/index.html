@@ -14,10 +14,19 @@
         </div>
       </div>
 
-      <figure class="code-window" aria-label="developer.py">
+      <div class="hero-visual">
+        <figure class="portrait">
+          <picture>
+            <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 720px) 240px, 420px">
+            <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 720px) 240px, 420px">
+            <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ profile.full_name }}" width="800" height="864" fetchpriority="high">
+          </picture>
+        </figure>
+        <figure class="code-window" aria-label="developer.py">
         <div class="code-bar" aria-hidden="true"><i></i><i></i><i></i><span>developer.py</span></div>
-<pre class="code" id="code"><code><span class="ln"><span class="k">class</span> <span class="c">Developer</span>:</span><span class="ln">    <span class="a">name</span>     = <span class="s">"{{ profile.full_name }}"</span></span><span class="ln">    <span class="a">location</span> = <span class="s">"{{ strings.code_location }}"</span></span><span class="ln">    <span class="a">stack</span>    = [{% for t in code_stack %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">builds</span>   = [{% for t in code_builds %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">status</span>   = <span class="s">"{{ strings.code_status }}"</span></span><span class="ln"> </span><span class="ln">    <span class="k">def</span> <span class="f">build</span>(<span class="a">self</span>, idea):</span><span class="ln">        <span class="k">return</span> idea.<span class="f">to_production</span>()</span></code></pre>
-      </figure>
+<pre class="code" id="code"><code><span class="ln"><span class="k">class</span> <span class="c">Developer</span>:</span><span class="ln">    <span class="a">name</span>     = <span class="s">"{{ profile.full_name }}"</span></span><span class="ln ln-extra">    <span class="a">location</span> = <span class="s">"{{ strings.code_location }}"</span></span><span class="ln">    <span class="a">stack</span>    = [{% for t in code_stack %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">builds</span>   = [{% for t in code_builds %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">status</span>   = <span class="s">"{{ strings.code_status }}"</span></span><span class="ln ln-extra"> </span><span class="ln ln-extra">    <span class="k">def</span> <span class="f">build</span>(<span class="a">self</span>, idea):</span><span class="ln ln-extra">        <span class="k">return</span> idea.<span class="f">to_production</span>()</span></code></pre>
+        </figure>
+      </div>
     </div>
     <a class="scroll-hint" href="#about" aria-label="{{ strings.scroll_hint }}"><span class="mouse" aria-hidden="true"></span>{{ strings.scroll_hint }}</a>
   </section>
@@ -29,16 +38,17 @@
         <h2 id="about-title">{{ strings.about_title }}</h2>
       </header>
       <div class="about-grid">
-        <picture class="about-photo">
-          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 900px) 200px, 300px">
-          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 900px) 200px, 300px">
-          <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ profile.full_name }}" width="800" height="864" loading="lazy" decoding="async">
-        </picture>
         <div class="about">
           <p>{{ strings.about_p1|highlight:projects }}</p>
           <p>{{ strings.about_p2|highlight:projects }}</p>
           <ul class="chips">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul>
         </div>
+        <dl class="facts">
+          <div><dt>{{ strings.fact_focus_label }}</dt><dd>{{ strings.fact_focus_value }}</dd></div>
+          <div><dt>{{ strings.fact_location_label }}</dt><dd>{{ strings.fact_location_value }}</dd></div>
+          <div><dt>{{ strings.fact_format_label }}</dt><dd>{{ strings.fact_format_value }}</dd></div>
+          <div><dt>{{ strings.fact_langs_label }}</dt><dd>{{ strings.fact_langs_value }}</dd></div>
+        </dl>
       </div>
     </div>
   </section>

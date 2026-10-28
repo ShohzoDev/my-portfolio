@@ -328,6 +328,41 @@ ul, ol { list-style: none; }
 .hero-sub { max-width: 31em; margin-top: 26px; font-size: 19px; line-height: 1.6; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
 
+/* right side: a round portrait with the code window under it */
+.hero-visual { display: grid; gap: 28px; justify-items: center; }
+.portrait {
+  position: relative;
+  width: min(100%, 300px);
+  aspect-ratio: 1;
+  padding: 6px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #8cc0ff, rgba(76, 154, 255, 0.15) 55%, rgba(76, 154, 255, 0.5));
+  box-shadow: 0 0 0 10px rgba(76, 154, 255, 0.06), 0 40px 90px -30px rgba(76, 154, 255, 0.6);
+}
+.portrait img {
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--bg);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+/* the "online" dot: same meaning as the status pill */
+.portrait::after {
+  content: "";
+  position: absolute;
+  right: 11%;
+  bottom: 9%;
+  width: 22px;
+  height: 22px;
+  border: 4px solid var(--bg);
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 4px rgba(63, 185, 80, 0.25);
+}
+.hero-visual .code-window { width: 100%; max-width: 460px; }
+.hero-visual .code { padding: 14px 18px 16px; font-size: 13px; line-height: 1.7; }
+
 /* the code window */
 .code-window {
   border: 1px solid var(--line-strong);
@@ -436,19 +471,15 @@ ul, ol { list-style: none; }
 /* about */
 .about-grid {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   gap: 56px;
   align-items: start;
 }
-.about-photo img {
-  width: 100%;
-  aspect-ratio: 4 / 4.4;
-  border: 1px solid var(--line-strong);
-  border-radius: 20px;
-  object-fit: cover;
-  object-position: 50% 22%;
-  box-shadow: 0 30px 70px -35px rgba(76, 154, 255, 0.55);
-}
+.facts { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.facts > div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; padding: 16px 22px; }
+.facts > div + div { border-top: 1px solid var(--line); }
+.facts dt { color: var(--mute); font: 500 12px/1.6 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.facts dd { margin: 0; color: var(--ink); font-size: 15.5px; font-weight: 500; }
 .about p { max-width: 40em; font-size: 18px; line-height: 1.75; }
 .about p + p { margin-top: 18px; }
 /* key phrases and product links: the eye can skim just these */
@@ -620,12 +651,14 @@ a.row:hover .row-arrow { transform: translate(3px, -3px); }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-copy > *,
+  .portrait,
   .code-window { animation: rise 0.7s var(--ease) both; }
+  .portrait { animation-delay: 0.1s; }
   .hero-copy > :nth-child(2) { animation-delay: 0.05s; }
   .hero-copy > :nth-child(3) { animation-delay: 0.1s; }
   .hero-copy > :nth-child(4) { animation-delay: 0.15s; }
   .hero-copy > :nth-child(5) { animation-delay: 0.2s; }
-  .code-window { animation-delay: 0.25s; }
+  .code-window { animation-delay: 0.35s; }
 }
 @keyframes rise {
   from { opacity: 0; transform: translateY(16px); }
@@ -644,9 +677,12 @@ a.row:hover .row-arrow { transform: translate(3px, -3px); }
   .header-end { margin-left: auto; }
   .menu { display: block; }
   .hero { min-height: 0; padding: 48px 0 104px; }
-  .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 48px; }
-  .code-window { max-width: 620px; }
-  .about-grid { grid-template-columns: 220px minmax(0, 1fr); gap: 36px; }
+  .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  /* tablets and phones: round photo + code side by side, above the text */
+  .hero-visual { order: -1; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; justify-items: stretch; }
+  .portrait { width: 200px; }
+  .hero-visual .code-window { max-width: none; }
+  .about-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
 }
 
 @media (max-width: 720px) {
@@ -657,14 +693,21 @@ a.row:hover .row-arrow { transform: translate(3px, -3px); }
   .hero-sub { font-size: 17px; }
   .hero-actions .btn { flex: 1 1 auto; }
   .btn-lg { padding: 15px 22px; font-size: 16px; }
-  .code { padding: 16px 14px 18px; font-size: 12px; line-height: 1.8; white-space: pre-wrap; }
-  /* a long line wraps under its value, not under the margin */
-  .code .ln { padding-left: 15ch; text-indent: -15ch; }
-  .code-bar { padding: 11px 14px; }
+  .code { white-space: pre-wrap; }
   .section { padding: 72px 0; }
   .section-head { margin-bottom: 32px; }
   .about-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .about-photo img { width: 180px; border-radius: 18px; }
+  .hero-visual { gap: 12px; }
+  .portrait { width: 116px; padding: 3px; box-shadow: 0 0 0 6px rgba(76, 154, 255, 0.06), 0 20px 40px -18px rgba(76, 154, 255, 0.6); }
+  .portrait img { border-width: 3px; }
+  .portrait::after { width: 16px; height: 16px; border-width: 3px; right: 6%; bottom: 6%; }
+  .code-bar { gap: 5px; padding: 8px 10px; }
+  .code-bar i { width: 8px; height: 8px; }
+  .code-bar span { margin-left: 4px; font-size: 10px; }
+  .hero-visual .code { padding: 10px 10px 12px; font-size: 10.5px; line-height: 1.6; }
+  .hero-visual .code .ln { padding-left: 4ch; text-indent: -4ch; }
+  .hero-visual .code .ln-extra { display: none; }   /* phones show the short version */
+  .facts > div { grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
   .about p { font-size: 16.5px; }
   .services { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .service { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 16px; padding: 20px; }
