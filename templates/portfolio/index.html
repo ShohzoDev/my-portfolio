@@ -1,90 +1,100 @@
 {% extends "portfolio/base.html" %}{% load static portfolio_extras %}
 
 {% block content %}
-<div class="layout">
-  <header class="side" id="top">
-    <div>
-      {% include "portfolio/_lang.html" %}
-      <div class="identity">
-        <picture>
-          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %}">
-          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %}">
-          <img class="avatar" src="{% static 'portfolio/img/profile-400.jpg' %}" alt="" width="76" height="76" fetchpriority="high">
-        </picture>
-        <h1 class="name">{{ profile.full_name }}</h1>
+  <section class="hero" id="top" aria-labelledby="hello">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.hero_status }}</p>
+        <p class="eyebrow">// {{ strings.hero_role }}</p>
+        <h1 class="hello" id="hello">{{ strings.hero_hello }} <em>{{ profile.full_name }}</em>.</h1>
+        <p class="hero-sub">{{ strings.hero_sub }}</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="#projects">{{ strings.cta_projects }} <span aria-hidden="true">↓</span></a>
+          <a class="btn btn-ghost btn-lg" href="#contact">{{ strings.cta_contact }}</a>
+        </div>
       </div>
-      <p class="role">{{ strings.hero_role }}</p>
-      <p class="lead">{{ strings.side_lead }}</p>
-      <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.hero_status }}</p>
 
-      <nav class="toc" aria-label="{{ strings.menu_label }}">
-        <ul>
-          <li><a href="#about"><span class="toc-line" aria-hidden="true"></span>{{ strings.nav_about }}</a></li>
-          <li><a href="#services"><span class="toc-line" aria-hidden="true"></span>{{ strings.nav_services }}</a></li>
-          <li><a href="#projects"><span class="toc-line" aria-hidden="true"></span>{{ strings.nav_projects }}</a></li>
-          <li><a href="#contact"><span class="toc-line" aria-hidden="true"></span>{{ strings.nav_contact }}</a></li>
-        </ul>
-      </nav>
+      <figure class="code-window" aria-label="developer.py">
+        <div class="code-bar" aria-hidden="true"><i></i><i></i><i></i><span>developer.py</span></div>
+<pre class="code" id="code"><code><span class="ln"><span class="k">class</span> <span class="c">Developer</span>:</span><span class="ln">    <span class="a">name</span>     = <span class="s">"{{ profile.full_name }}"</span></span><span class="ln">    <span class="a">location</span> = <span class="s">"{{ strings.code_location }}"</span></span><span class="ln">    <span class="a">stack</span>    = [{% for t in code_stack %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">builds</span>   = [{% for t in code_builds %}<span class="s">"{{ t }}"</span>{% if not forloop.last %}, {% endif %}{% endfor %}]</span><span class="ln">    <span class="a">status</span>   = <span class="s">"{{ strings.code_status }}"</span></span><span class="ln"> </span><span class="ln">    <span class="k">def</span> <span class="f">build</span>(<span class="a">self</span>, idea):</span><span class="ln">        <span class="k">return</span> idea.<span class="f">to_production</span>()</span></code></pre>
+      </figure>
     </div>
+    <a class="scroll-hint" href="#about" aria-label="{{ strings.scroll_hint }}"><span class="mouse" aria-hidden="true"></span>{{ strings.scroll_hint }}</a>
+  </section>
 
-    {% if social_links %}<nav class="socials" aria-label="{{ strings.socials_label }}">{% include "portfolio/_socials.html" %}</nav>{% endif %}
-  </header>
-
-  <main id="main">
-    <section id="about" aria-labelledby="about-title">
-      <h2 class="sticky-title" id="about-title">{{ strings.nav_about }}</h2>
-      <div class="about">
-        <p>{{ strings.about_p1|highlight:projects }}</p>
-        <p>{{ strings.about_p2|highlight:projects }}</p>
+  <section class="section" id="about" aria-labelledby="about-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow">// {{ strings.nav_about }}</p>
+        <h2 id="about-title">{{ strings.about_title }}</h2>
+      </header>
+      <div class="about-grid">
+        <picture class="about-photo">
+          <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 900px) 200px, 300px">
+          <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 900px) 200px, 300px">
+          <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ profile.full_name }}" width="800" height="864" loading="lazy" decoding="async">
+        </picture>
+        <div class="about">
+          <p>{{ strings.about_p1|highlight:projects }}</p>
+          <p>{{ strings.about_p2|highlight:projects }}</p>
+          <ul class="chips">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul>
+        </div>
       </div>
-      <ul class="chips">{% for tool in stack %}<li>{{ tool }}</li>{% endfor %}</ul>
-    </section>
+    </div>
+  </section>
 
-    <section id="services" aria-labelledby="services-title">
-      <h2 class="sticky-title" id="services-title">{{ strings.nav_services }}</h2>
-      <ol class="rows">
+  <section class="section" id="services" aria-labelledby="services-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow">// {{ strings.nav_services }}</p>
+        <h2 id="services-title">{{ strings.services_title }}</h2>
+      </header>
+      <ul class="services">
         {% for s in services %}
-          <li class="row">
-            <span class="row-side">{{ s.n }}</span>
-            <span class="row-main">
-              <span class="row-title">{{ s.title }}</span>
-              <span class="row-desc">{{ s.desc }}</span>
-            </span>
-          </li>
-        {% endfor %}
-      </ol>
-    </section>
-
-    <section id="projects" aria-labelledby="projects-title">
-      <h2 class="sticky-title" id="projects-title">{{ strings.nav_projects }}</h2>
-      <ul class="rows">
-        {% for p in projects %}
-          <li id="p-{{ p.slug }}">
-            {% if p.link %}<a class="row is-link" href="{{ p.link }}" target="_blank" rel="noopener">{% else %}<div class="row">{% endif %}
-              <span class="row-side">{% if p.domain %}{{ p.domain }}{% else %}{{ p.status_label }}{% endif %}</span>
-              <span class="row-main">
-                <span class="row-title">{{ p.title }}{% if p.is_founder %} <span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}{% if p.status != "live" %} <span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% endif %}{% if p.link %} <span class="row-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> ({{ strings.opens_new_tab }})</span>{% endif %}</span>
-                <span class="row-desc">{{ p.desc }}</span>
-              </span>
-            {% if p.link %}</a>{% else %}</div>{% endif %}
+          <li class="service">
+            <span class="service-icon" aria-hidden="true">{{ s.icon }}</span>
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.desc }}</p>
           </li>
         {% endfor %}
       </ul>
-    </section>
+    </div>
+  </section>
 
-    <section id="contact" aria-labelledby="contact-title">
-      <h2 class="sticky-title" id="contact-title">{{ strings.nav_contact }}</h2>
-      <p class="contact-title">{{ strings.contact_title }}</p>
-      <p class="contact-desc">{{ strings.contact_desc }}</p>
-      <div class="contact-actions">
-        {% if telegram_url %}<a class="btn" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
-        {% if contact_email %}<span class="contact-or">{{ strings.contact_or }} <a class="email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></span>{% endif %}
+  <section class="section" id="projects" aria-labelledby="projects-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow">// {{ strings.nav_projects }}</p>
+        <h2 id="projects-title">{{ strings.projects_title }}</h2>
+      </header>
+      <ul class="rows">
+          {% for p in projects %}
+            <li id="p-{{ p.slug }}">
+              {% if p.link %}<a class="row is-link" href="{{ p.link }}" target="_blank" rel="noopener">{% else %}<div class="row">{% endif %}
+                <span class="row-side">{% if p.domain %}{{ p.domain }}{% else %}{{ p.status_label }}{% endif %}</span>
+                <span class="row-main">
+                  <span class="row-title">{{ p.title }}{% if p.is_founder %} <span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}{% if p.status != "live" %} <span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% endif %}{% if p.link %} <span class="row-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> ({{ strings.opens_new_tab }})</span>{% endif %}</span>
+                  <span class="row-desc">{{ p.desc }}</span>
+                </span>
+              {% if p.link %}</a>{% else %}</div>{% endif %}
+            </li>
+          {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="contact" aria-labelledby="contact-title">
+    <div class="container">
+      <div class="contact-card">
+        <p class="eyebrow">// {{ strings.nav_contact }}</p>
+        <h2 id="contact-title">{{ strings.contact_title }}</h2>
+        <p class="contact-desc">{{ strings.contact_desc }}</p>
+        <div class="contact-actions">
+          {% if telegram_url %}<a class="btn btn-primary btn-lg" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.contact_telegram_btn }} <span aria-hidden="true">↗</span></a>{% endif %}
+          {% if contact_email %}<span class="contact-or">{{ strings.contact_or }} <a class="email" href="mailto:{{ contact_email }}">{{ contact_email }}</a></span>{% endif %}
+        </div>
+        {% if social_links %}<nav class="socials" aria-label="{{ strings.socials_label }}">{% include "portfolio/_socials.html" %}</nav>{% endif %}
       </div>
-      <footer class="site-footer">
-        <p>{{ strings.footer_note }}</p>
-        <p>&copy; {% now "Y" %} {{ profile.full_name }}</p>
-      </footer>
-    </section>
-  </main>
-</div>
+    </div>
+  </section>
 {% endblock %}

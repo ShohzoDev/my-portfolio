@@ -11,6 +11,30 @@ from .content import DEFAULT_LANGUAGE, LANGUAGE_NAMES, OG_LOCALES, STACK, STRING
 from .models import Project, SiteProfile, SocialLink
 
 LANG_COOKIE = "site_lang"
+
+# Line icons for the four services (business systems, SaaS, bots, servers).
+SERVICE_ICONS = [
+    mark_safe(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linecap="round" stroke-linejoin="round" focusable="false">'
+        '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 17.5h7M17.5 14v7"/></svg>'
+    ),
+    mark_safe(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linecap="round" stroke-linejoin="round" focusable="false">'
+        '<path d="M12 3 3 7.5l9 4.5 9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/></svg>'
+    ),
+    mark_safe(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linecap="round" stroke-linejoin="round" focusable="false">'
+        '<path d="M21 4 3 11l6.5 2.5L12 20l3-4.5L21 4Z"/><path d="m9.5 13.5 5-4"/></svg>'
+    ),
+    mark_safe(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" '
+        'stroke-linecap="round" stroke-linejoin="round" focusable="false">'
+        '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6"/></svg>'
+    ),
+]
 LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 
@@ -81,6 +105,19 @@ def _public_email():
     return "" if email.endswith("@example.com") else email
 
 
+def _asset_version():
+    """Changes whenever style.css or site.js changes, so the browser never
+    pairs fresh HTML with a stale cached stylesheet (production also has
+    WhiteNoise's hashed file names; this matters most under runserver)."""
+    stamps = []
+    for name in ("css/style.css", "js/site.js"):
+        try:
+            stamps.append(int((settings.BASE_DIR / "static" / "portfolio" / name).stat().st_mtime))
+        except OSError:
+            pass
+    return max(stamps, default=0)
+
+
 def _projects(lang):
     strings = STRINGS[lang]
     projects = [p.localized(lang) for p in Project.objects.filter(is_active=True)]
@@ -130,8 +167,11 @@ def index(request, lang):
         "profile": profile,
         "projects": _projects(lang),
         "services": [
-            {"n": f"0{i}", "title": strings[f"s{i}_t"], "desc": strings[f"s{i}_d"]} for i in range(1, 5)
+            {"icon": SERVICE_ICONS[i - 1], "title": strings[f"s{i}_t"], "desc": strings[f"s{i}_d"]}
+            for i in range(1, 5)
         ],
+        "code_stack": STACK[:3],
+        "code_builds": json.loads(strings["code_builds"]),
         "stack": STACK,
         "social_links": social_links,
         "telegram_url": telegram_url,
@@ -149,6 +189,7 @@ def index(request, lang):
         "og_image_url": _abs_static(request, "portfolio/img/og-image.jpg"),
         "og_locale": OG_LOCALES[lang],
         "og_locale_alternates": [OG_LOCALES[c] for c in SUPPORTED_LANGUAGES if c != lang],
+        "asset_version": _asset_version(),
         "jsonld": _json_for_script(
             _person(request, lang, profile.full_name, strings, social_links, github_url, email)
         ),

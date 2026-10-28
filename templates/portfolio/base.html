@@ -35,15 +35,56 @@
 {% if lang == "ru" %}<link rel="preload" href="{% static 'portfolio/fonts/ibm-plex-sans-cyrillic-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
 {% else %}<link rel="preload" href="{% static 'portfolio/fonts/ibm-plex-sans-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
 {% endif %}<link rel="stylesheet" href="{% static 'portfolio/css/fonts.css' %}">
-<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
+<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}?v={{ asset_version }}">
 <script type="application/ld+json">{{ jsonld }}</script>
 </head>
 <body>
 
 <a class="skip-link" href="#main">{{ strings.skip_link }}</a>
 
-{% block content %}{% endblock %}
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="#top" aria-label="{{ profile.full_name }}">
+      <img src="{% static 'portfolio/img/favicon.svg' %}" alt="" width="34" height="34">
+      <span>{{ social_handle }}</span>
+    </a>
 
-<script src="{% static 'portfolio/js/site.js' %}" defer></script>
+    <nav class="nav" aria-label="{{ strings.menu_label }}">
+      <a href="#about">{{ strings.nav_about }}</a>
+      <a href="#services">{{ strings.nav_services }}</a>
+      <a href="#projects">{{ strings.nav_projects }}</a>
+      <a href="#contact">{{ strings.nav_contact }}</a>
+    </nav>
+
+    <div class="header-end">
+      {% include "portfolio/_lang.html" %}
+      {% if telegram_url %}<a class="btn btn-primary btn-sm header-cta" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.header_cta }}</a>{% endif %}
+      <details class="menu">
+        <summary aria-label="{{ strings.menu_label }}"><span></span><span></span><span></span></summary>
+        <nav class="menu-panel" aria-label="{{ strings.menu_label }}">
+          <a href="#about">{{ strings.nav_about }}</a>
+          <a href="#services">{{ strings.nav_services }}</a>
+          <a href="#projects">{{ strings.nav_projects }}</a>
+          <a href="#contact">{{ strings.nav_contact }}</a>
+          {% if telegram_url %}<a class="menu-cta" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ strings.header_cta }} ↗</a>{% endif %}
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <a class="logo" href="#top"><img src="{% static 'portfolio/img/favicon.svg' %}" alt="" width="28" height="28"><span>{{ social_handle }}</span></a>
+    <p>{{ strings.footer_note }}</p>
+    <p>&copy; {% now "Y" %} {{ profile.full_name }}</p>
+  </div>
+</footer>
+
+<script src="{% static 'portfolio/js/site.js' %}?v={{ asset_version }}" defer></script>
 </body>
 </html>

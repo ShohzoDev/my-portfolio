@@ -12,11 +12,11 @@ plus one small script that only adds polish.
 
 ## What's inside
 
-- **Split layout:** on desktop the left column stays put (name, role, one
-  line, status, section menu, social links) while the right column scrolls
-  through About, Services, Projects and Contact; the menu highlights the
-  section you are reading. On phones it is one column with sticky section
-  titles.
+- **Header + full-screen hero:** logo, section menu (underlines the section
+  you are reading), language toggle and a "Let's talk" button; the hero says
+  hello and shows a Python code window that types itself out. Below:
+  About, Services, Projects and Contact, each opening with a `// eyebrow`
+  and a big title.
 - **Projects as a directory of links.** Every project already has its own
   live site, so each row is just the name, one line and the domain, and
   the whole row opens the site.

@@ -3,12 +3,13 @@
 [English README](README.md)
 
 Django asosidagi shaxsiy portfolio. 3 tilda (har biri alohida URL'da:
-`/uz/`, `/ru/`, `/en/`). Desktopda sahifa ikkiga bo'lingan: chapda ism,
-kasb, holat, bo'limlar menyusi va ijtimoiy tarmoqlar joyida turadi, o'ngda
-Men haqimda, Xizmatlar, Loyihalar va Aloqa aylanadi. Telefonda bitta ustun. Har bir loyihaning
+`/uz/`, `/ru/`, `/en/`). Tepada logo, menyu, til tanlagich va «Gaplashamiz»
+tugmasi; to'liq ekranli hero'da «Salom, men Shohzod.» va o'zi yozilib
+chiqadigan Python kod oynasi. Pastda: Men haqimda, Xizmatlar, Loyihalar, Aloqa. Har bir loyihaning
 o'z sayti bor, shuning uchun portfolio ularni havolalar ro'yxati sifatida
 ko'rsatadi: nomi, bir qatorli tavsif va domeni. Sahifa toza HTML va CSS;
-`site.js` faqat menyuda joriy bo'limni yoritadi va kursor nurini qo'shadi.
+`site.js` kodni yozib chiqaradi, menyuda joriy bo'limni belgilaydi va mobil
+menyuni yopadi.
 
 ## Tuzilishi
 

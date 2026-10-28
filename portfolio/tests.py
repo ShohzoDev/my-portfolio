@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from .content import STACK, STRINGS, SUPPORTED_LANGUAGES
 from .models import LoginFailure, Project, SiteProfile, SocialLink
+from .views import _asset_version
 
 # The index template uses {% static %}, and production uses WhiteNoise's
 # manifest storage (hashed filenames, requires `collectstatic`). Django's test
@@ -159,29 +160,51 @@ class IndexPageTests(TestCase):
         self.assertIn("https://github.com/ShohzoDev", data["sameAs"])
         self.assertIn("https://t.me/ShohzoDev", data["sameAs"])
 
-    def test_split_layout_with_section_menu(self):
+    def test_header_hero_and_sections(self):
         for lang in SUPPORTED_LANGUAGES:
             strings = STRINGS[lang]
             html = self.get(lang)
-            self.assertIn('<header class="side" id="top">', html)
-            self.assertEqual(re.findall(r'<section id="([a-z]+)"', html), ["about", "services", "projects", "contact"])
-            # the left menu points at every section, in page order
-            self.assertEqual(re.findall(r'<li><a href="#([a-z]+)">', html), ["about", "services", "projects", "contact"])
-            for key in ("nav_about", "nav_services", "nav_projects", "nav_contact"):
-                self.assertIn(strings[key], html)
+            self.assertIn('<header class="site-header">', html)
+            self.assertEqual(re.findall(r'<section class="[a-z ]+" id="([a-z]+)"', html),
+                             ["top", "about", "services", "projects", "contact"])
+            # header menu (desktop) and mobile menu both point at every section, in page order
+            nav = html[html.index('<nav class="nav"'):html.index('</nav>', html.index('<nav class="nav"'))]
+            self.assertEqual(re.findall(r'href="#([a-z]+)"', nav), ["about", "services", "projects", "contact"])
+            self.assertIn('<details class="menu">', html)
+            self.assertIn(strings["hero_hello"].replace("'", "&#x27;") + " <em>Shohzod</em>.", html)
+            self.assertIn(f"// {strings['hero_role']}", html)
+            self.assertIn(strings["header_cta"].replace("'", "&#x27;"), html)
             for n in range(1, 5):
                 self.assertIn(strings[f"s{n}_t"].replace("'", "&#x27;"), html)
-                self.assertIn(f'<span class="row-side">0{n}</span>', html)
-            self.assertIn(strings["side_lead"].replace("'", "&#x27;"), html)
             self.assertNotIn("*", html[html.index('<div class="about">'):html.index('<ul class="chips">')])
             self.assertIn('<a href="https://zebest.uz" target="_blank" rel="noopener">Zebest</a>', html)
-            self.assertIn('class="avatar"', html)
             for tool in STACK:
                 self.assertIn(f"<li>{tool}</li>", html)
             self.assertNotIn("{#", html)  # no leaked template syntax
             self.assertNotIn("{%", html)
-            for gone in ('class="diagram', "<form", "cmdk", "script.js", "menu.js"):  # removed in redesigns
+            for gone in ('class="diagram', "<form", "cmdk", "script.js", "menu.js", 'class="side"'):
                 self.assertNotIn(gone, html)
+
+    def test_code_window_is_valid_python(self):
+        """The hero code is real, runnable Python — in every language."""
+        import ast
+        import html as html_lib
+
+        for lang in SUPPORTED_LANGUAGES:
+            page = self.get(lang)
+            block = page[page.index('<pre class="code" id="code"><code>'):page.index("</code></pre>")]
+            lines = re.findall(r'<span class="ln">(.*?)</span>(?=<span class="ln">|$)', block + "", re.S)
+            text = "\n".join(html_lib.unescape(re.sub(r"<[^>]+>", "", ln)) for ln in lines)
+            self.assertIn('name     = "Shohzod"', text)
+            self.assertIn(STRINGS[lang]["code_status"], text)
+            ast.parse(text)  # raises SyntaxError if the snippet is broken
+
+    def test_assets_carry_a_cache_busting_version(self):
+        html = self.get("en")
+        version = _asset_version()
+        self.assertGreater(version, 0)
+        self.assertIn(f'/static/portfolio/css/style.css?v={version}"', html)
+        self.assertIn(f'/static/portfolio/js/site.js?v={version}"', html)
 
     def test_highlight_filter(self):
         from .templatetags.portfolio_extras import highlight
@@ -196,7 +219,7 @@ class IndexPageTests(TestCase):
 
     def test_projects_are_rows_linking_to_their_sites(self):
         html = self.get("en")
-        section = html[html.index('<section id="projects"'):html.index('<section id="contact"')]
+        section = html[html.index('id="projects"'):html.index('id="contact"')]
         rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="row is-link" href="([^"]+)" target="_blank" rel="noopener">', section)
         self.assertEqual(
             rows,
@@ -251,8 +274,10 @@ class IndexPageTests(TestCase):
 
     def test_telegram_is_the_main_button(self):
         html = self.get("en")
-        self.assertIn('<a class="btn" href="https://t.me/ShohzoDev" target="_blank" rel="noopener">'
+        self.assertIn('href="https://t.me/ShohzoDev" target="_blank" rel="noopener">'
                       + STRINGS["en"]["contact_telegram_btn"], html)
+        self.assertIn('href="https://t.me/ShohzoDev" target="_blank" rel="noopener">'
+                      + STRINGS["en"]["header_cta"].replace("'", "&#x27;"), html)
         SocialLink.objects.filter(platform="telegram").update(url="")
         self.assertNotIn(STRINGS["en"]["contact_telegram_btn"], self.get("en"))
 
@@ -270,7 +295,7 @@ class IndexPageTests(TestCase):
         SiteProfile.objects.update(full_name="Shohzod Testov")
         html = self.get("en")
         self.assertIn("<title>Shohzod Testov — Django Backend Engineer</title>", html)
-        self.assertIn('<h1 class="name">Shohzod Testov</h1>', html)
+        self.assertIn('<em>Shohzod Testov</em>', html)
         data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
         self.assertEqual(data["name"], "Shohzod Testov")
 
@@ -322,7 +347,7 @@ class SecurityTests(TestCase):
         # JSON-LD data (never executes) and the one external script — no inline code.
         self.assertEqual(
             re.findall(r"<script([^>]*)>", html),
-            [' type="application/ld+json"', ' src="/static/portfolio/js/site.js" defer'],
+            [' type="application/ld+json"', f' src="/static/portfolio/js/site.js?v={_asset_version()}" defer'],
         )
         self.assertNotIn(" style=", html)  # style-src 'self' forbids inline styles
 
