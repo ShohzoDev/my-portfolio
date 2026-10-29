@@ -205,6 +205,17 @@ class IndexPageTests(TestCase):
             self.assertIn("return idea.to_production()", text)
             ast.parse(text)  # raises SyntaxError if the snippet is broken
 
+    def test_footer_shows_last_update_as_a_git_line(self):
+        import datetime
+
+        year = str(datetime.date.today().year)
+        for lang, piece in (("uz", "-"), ("ru", " "), ("en", ", ")):
+            html = self.get(lang)
+            line = html[html.index('class="git-line"'):]
+            line = line[:line.index("</p>")]
+            self.assertIn("git push", line)
+            self.assertIn(year, line)
+
     def test_assets_carry_a_cache_busting_version(self):
         html = self.get("en")
         version = _asset_version()

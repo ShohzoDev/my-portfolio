@@ -1,3 +1,4 @@
+import datetime
 import json
 
 from django.conf import settings
@@ -118,6 +119,28 @@ def _asset_version():
     return max(stamps, default=0)
 
 
+_MONTHS = {
+    "uz": ["yan", "fev", "mar", "apr", "may", "iyn", "iyl", "avg", "sen", "okt", "noy", "dek"],
+    "ru": ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"],
+    "en": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+}
+
+
+def _updated_label(lang):
+    """The date of the newest static asset, written the way `lang` writes dates
+    (the footer shows it as a `git push` line, so visitors see the site is alive)."""
+    ts = _asset_version()
+    if not ts:
+        return ""
+    d = datetime.date.fromtimestamp(ts)
+    m = _MONTHS[lang][d.month - 1]
+    if lang == "uz":
+        return f"{d.day}-{m}, {d.year}"
+    if lang == "ru":
+        return f"{d.day} {m} {d.year}"
+    return f"{m} {d.day}, {d.year}"
+
+
 def _projects(lang):
     strings = STRINGS[lang]
     projects = [p.localized(lang) for p in Project.objects.filter(is_active=True)]
@@ -195,6 +218,7 @@ def index(request, lang):
         "og_locale": OG_LOCALES[lang],
         "og_locale_alternates": [OG_LOCALES[c] for c in SUPPORTED_LANGUAGES if c != lang],
         "asset_version": _asset_version(),
+        "updated_label": _updated_label(lang),
         "jsonld": _json_for_script(
             _person(request, lang, profile, strings, social_links, github_url, email)
         ),

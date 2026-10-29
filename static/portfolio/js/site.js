@@ -7,6 +7,21 @@
 
   var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ----------------------------------------------------- console greeting */
+  var hello = {
+    uz: "Kodni köryapsizmi? Demak, bir tilda gaplaşamiz.",
+    ru: "Читаете код? Значит, говорим на одном языке.",
+    en: "Reading the code? Then we speak the same language.",
+  };
+  try {
+    console.log(
+      "%cShohzoDev%c\n\n" + (hello[document.documentElement.lang] || hello.en) +
+      "\n→ https://t.me/ShohzoDev\n→ https://github.com/ShohzoDev",
+      "background:#4c9aff;color:#04111f;font:700 15px 'IBM Plex Sans',sans-serif;padding:5px 12px;border-radius:7px",
+      "color:#aab4c3;font:400 12.5px 'IBM Plex Mono',monospace;line-height:1.8"
+    );
+  } catch (e) { /* a console that can't style is fine */ }
+
   /* ------------------------------------------------------------ typing */
   var code = document.querySelector("#code code");
   if (code && !calm) {

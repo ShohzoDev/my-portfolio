@@ -39,6 +39,8 @@
 <script type="application/ld+json">{{ jsonld }}</script>
 </head>
 <body>
+<!-- Qiziqib ichiga qaraganingiz uchun rahmat. Bu sayt: Django + qo'lda yozilgan
+     CSS, bitta kichik skript. Savollar bo'lsa: https://t.me/ShohzoDev -->
 
 <a class="skip-link" href="#main">{{ strings.skip_link }}</a>
 
@@ -82,6 +84,7 @@
     <a class="logo" href="#top"><img src="{% static 'portfolio/img/favicon.svg' %}" alt="" width="28" height="28"><span>{{ social_handle }}</span></a>
     <p>{{ strings.footer_note }}</p>
     <p>&copy; {% now "Y" %} {{ profile.full_name }}</p>
+    {% if updated_label %}<p class="git-line"><span class="git-prompt" aria-hidden="true">$</span> git push <span aria-hidden="true">·</span> {{ updated_label }}</p>{% endif %}
   </div>
 </footer>
 
