@@ -82,7 +82,8 @@ class ProjectModelTests(TestCase):
         self.assertEqual(data["title"], "BuildBest")
         self.assertEqual(data["domain"], "buildbest.uz")
         self.assertIn("строительных", data["desc"])
-        self.assertEqual(set(data), {"slug", "title", "desc", "status", "is_founder", "link", "domain"})
+        self.assertEqual(set(data), {"slug", "title", "desc", "status", "is_founder", "link", "domain", "tech"})
+        self.assertEqual(data["tech"], ["Django", "PostgreSQL", "PWA"])
 
 
 class ContentTests(TestCase):
@@ -166,12 +167,12 @@ class IndexPageTests(TestCase):
             html = self.get(lang)
             self.assertIn('<header class="site-header">', html)
             self.assertEqual(re.findall(r'<section class="[a-z ]+" id="([a-z]+)"', html),
-                             ["top", "about", "services", "projects", "contact"])
+                             ["top", "about", "services", "projects", "process", "contact"])
             # header menu (desktop) and mobile menu both point at every section, in page order
             nav = html[html.index('<nav class="nav"'):html.index('</nav>', html.index('<nav class="nav"'))]
             self.assertEqual(re.findall(r'href="#([a-z]+)"', nav), ["about", "services", "projects", "contact"])
             self.assertIn('<details class="menu">', html)
-            self.assertIn(strings["hero_hello"].replace("'", "&#x27;") + " <em>Shohzod</em>.", html)
+            self.assertIn(strings["hero_hello"].replace("'", "&#x27;") + f" <em>{'Шохзод' if lang == 'ru' else 'Shohzod'}</em>.", html)
             self.assertIn(f"// {strings['hero_role']}", html)
             self.assertIn(strings["header_cta"].replace("'", "&#x27;"), html)
             for n in range(1, 5):
@@ -222,10 +223,10 @@ class IndexPageTests(TestCase):
             " not Draft. Zebest again &lt;script&gt;",  # first mention only; text is escaped
         )
 
-    def test_projects_are_rows_linking_to_their_sites(self):
+    def test_projects_are_compact_rows_linking_to_their_sites(self):
         html = self.get("en")
-        section = html[html.index('id="projects"'):html.index('id="contact"')]
-        rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="row is-link" href="([^"]+)" target="_blank" rel="noopener">', section)
+        section = html[html.index('id="projects"'):html.index('id="process"')]
+        rows = re.findall(r'<li id="p-([a-z-]+)">\s*<a class="row" href="([^"]+)" target="_blank" rel="noopener">', section)
         self.assertEqual(
             rows,
             [
@@ -237,8 +238,11 @@ class IndexPageTests(TestCase):
             ],
         )
         for domain in ("zebest.uz", "buildbest.uz", "oqqushlar.uz", "geodezistman.uz"):
-            self.assertIn(f'<span class="row-side">{domain}</span>', section)
+            self.assertIn(f"{domain}</span>", section)
         self.assertNotIn("https://", re.sub(r'href="[^"]+"', "", section))  # domains shown bare
+        # short on purpose: no screenshots, no tech tags, no long text in this section
+        for gone in ("browser", "project-card", "project-tech", "<img"):
+            self.assertNotIn(gone, section)
         self.assertNotIn("BuildOps", html)
         self.assertNotIn("p-geo-portfolio", html)
         self.assertNotIn("p-lingvoapp", html)
@@ -251,6 +255,22 @@ class IndexPageTests(TestCase):
         self.assertIn('<div class="row">', row)
         self.assertIn(STRINGS["en"]["status_dev"], row)  # non-live status is spelled out
         self.assertNotIn("href=", row)
+
+    def test_process_steps(self):
+        for lang in SUPPORTED_LANGUAGES:
+            html = self.get(lang)
+            self.assertEqual(re.findall(r'<span class="step-n" aria-hidden="true">(\d\d)</span>', html),
+                             ["01", "02", "03", "04"])
+            for n in range(1, 5):
+                self.assertIn(STRINGS[lang][f"p{n}_t"], html)
+
+    def test_russian_page_writes_the_name_in_cyrillic(self):
+        self.assertIn("<em>Шохзод</em>", self.get("ru"))
+        self.assertIn("<title>Шохзод — ", self.get("ru"))
+        self.assertIn("<em>Shohzod</em>", self.get("uz"))
+        self.assertIn("<em>Shohzod</em>", self.get("en"))
+        data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', self.get("ru"), re.S).group(1))
+        self.assertEqual((data["name"], data["alternateName"]), ("Shohzod", "Шохзод"))
 
     def test_inactive_project_is_hidden(self):
         Project.objects.filter(slug="roma-food").update(is_active=False)

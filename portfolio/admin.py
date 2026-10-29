@@ -21,7 +21,7 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ("title_uz", "title_ru", "title_en", "link")
     prepopulated_fields = {"slug": ("title_en",)}
     fieldsets = (
-        (None, {"fields": ("slug", "link", "status", "is_founder", "order", "is_active")}),
+        (None, {"fields": ("slug", "link", "status", "tech", "is_founder", "order", "is_active")}),
         ("O'zbekcha", {"fields": ("title_uz", "desc_uz")}),
         ("Русский", {"fields": ("title_ru", "desc_ru")}),
         ("English", {"fields": ("title_en", "desc_en")}),
@@ -36,7 +36,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(SiteProfile)
 class SiteProfileAdmin(admin.ModelAdmin):
-    fields = ("full_name",)
+    fields = ("full_name", "full_name_ru")
 
     def has_add_permission(self, request):
         return not SiteProfile.objects.exists()

@@ -35,6 +35,9 @@ static/portfolio/          — css, js/site.js, rasmlar, o'z serverimizdagi shri
   saytga olib boradi, havola esa domen ko'rinishida chiqadi
   (`https://www.zebest.uz/` → `zebest.uz`). «Ishlamoqda»dan boshqa holat
   nom yonida yoziladi; «Men asoschiman» belgilansa — «Asoschi» belgisi.
+  Loyihalar ataylab ixcham: nom, bir qatorli tavsif va domen — batafsil
+  ma'lumotni mijoz loyihaning o'z saytidan oladi.
+  Rus sahifasidagi ism — *Sayt profili → Ism (kirillda)*.
 - **Ijtimoiy tarmoqlar** — admin panel → *Ijtimoiy tarmoqlar*. Faqat URL
   kiritilganlari saytda ko'rinadi. **Telegram** URL'i kiritilsa, u
   saytdagi asosiy "Telegram'da yozing" tugmasiga aylanadi.

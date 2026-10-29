@@ -6,7 +6,7 @@
       <div class="hero-copy">
         <p class="status-pill"><span class="dot" aria-hidden="true"></span>{{ strings.hero_status }}</p>
         <p class="eyebrow">// {{ strings.hero_role }}</p>
-        <h1 class="hello" id="hello">{{ strings.hero_hello }} <em>{{ profile.full_name }}</em>.</h1>
+        <h1 class="hello" id="hello">{{ strings.hero_hello }} <em>{{ display_name }}</em>.</h1>
         <p class="hero-sub">{{ strings.hero_sub }}</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" href="#projects">{{ strings.cta_projects }} <span aria-hidden="true">↓</span></a>
@@ -19,7 +19,7 @@
           <picture>
             <source type="image/avif" srcset="{% static 'portfolio/img/profile-400.avif' %} 400w, {% static 'portfolio/img/profile-800.avif' %} 800w" sizes="(max-width: 720px) 240px, 420px">
             <source type="image/webp" srcset="{% static 'portfolio/img/profile-400.webp' %} 400w, {% static 'portfolio/img/profile-800.webp' %} 800w" sizes="(max-width: 720px) 240px, 420px">
-            <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ profile.full_name }}" width="800" height="864" fetchpriority="high">
+            <img src="{% static 'portfolio/img/profile-800.jpg' %}" alt="{{ display_name }}" width="800" height="864" fetchpriority="high">
           </picture>
         </figure>
         <figure class="code-window" aria-label="developer.py">
@@ -76,20 +76,40 @@
       <header class="section-head">
         <p class="eyebrow">// {{ strings.nav_projects }}</p>
         <h2 id="projects-title">{{ strings.projects_title }}</h2>
+        <p class="section-lead">{{ strings.projects_lead }}</p>
       </header>
       <ul class="rows">
-          {% for p in projects %}
-            <li id="p-{{ p.slug }}">
-              {% if p.link %}<a class="row is-link" href="{{ p.link }}" target="_blank" rel="noopener">{% else %}<div class="row">{% endif %}
-                <span class="row-side">{% if p.domain %}{{ p.domain }}{% else %}{{ p.status_label }}{% endif %}</span>
-                <span class="row-main">
-                  <span class="row-title">{{ p.title }}{% if p.is_founder %} <span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}{% if p.status != "live" %} <span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% endif %}{% if p.link %} <span class="row-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> ({{ strings.opens_new_tab }})</span>{% endif %}</span>
-                  <span class="row-desc">{{ p.desc }}</span>
-                </span>
-              {% if p.link %}</a>{% else %}</div>{% endif %}
-            </li>
-          {% endfor %}
+        {% for p in projects %}
+          <li id="p-{{ p.slug }}">
+            {% if p.link %}<a class="row" href="{{ p.link }}" target="_blank" rel="noopener">{% else %}<div class="row">{% endif %}
+              <span class="row-main">
+                <span class="row-title">{{ p.title }}{% if p.is_founder %} <span class="founder-tag">{{ strings.founder_label }}</span>{% endif %}{% if p.status != "live" %} <span class="status status-{{ p.status }}"><span class="dot" aria-hidden="true"></span>{{ p.status_label }}</span>{% endif %}</span>
+                <span class="row-desc">{{ p.desc }}</span>
+              </span>
+              {% if p.domain %}<span class="row-domain">{% if p.status == "live" %}<span class="dot" aria-hidden="true"></span>{% endif %}{{ p.domain }}</span>{% endif %}
+              {% if p.link %}<span class="row-arrow" aria-hidden="true">↗</span><span class="visually-hidden"> ({{ strings.opens_new_tab }})</span>{% endif %}
+            {% if p.link %}</a>{% else %}</div>{% endif %}
+          </li>
+        {% endfor %}
       </ul>
+    </div>
+  </section>
+
+  <section class="section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <header class="section-head">
+        <p class="eyebrow">// {{ strings.nav_process }}</p>
+        <h2 id="process-title">{{ strings.process_title }}</h2>
+      </header>
+      <ol class="steps">
+        {% for step in process %}
+          <li class="step">
+            <span class="step-n" aria-hidden="true">{{ step.n }}</span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.desc }}</p>
+          </li>
+        {% endfor %}
+      </ol>
     </div>
   </section>
 

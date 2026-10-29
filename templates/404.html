@@ -3,15 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
 <title>Sahifa topilmadi — Shohzod</title>
+<link rel="icon" type="image/svg+xml" href="/static/portfolio/img/favicon.svg">
+<link rel="stylesheet" href="/static/portfolio/css/fonts.css">
 <link rel="stylesheet" href="/static/portfolio/css/error.css">
 </head>
 <body>
-  <div class="wrap">
-    <div class="code">404</div>
-    <h1>Sahifa topilmadi</h1>
-    <p>Siz izlagan sahifa mavjud emas yoki köçirilgan.</p>
-    <a href="/">Boş sahifaga qaytiş</a>
-  </div>
+  <main class="wrap">
+    <a class="logo" href="/"><img src="/static/portfolio/img/favicon.svg" alt="" width="40" height="40"></a>
+    <p class="code">// 404</p>
+    <h1>Bu sahifa topilmadi</h1>
+    <p class="text">Havola eskirgan yoki manzil xato yozilgan bölishi mumkin.</p>
+    <pre class="snippet" aria-hidden="true"><span class="k">raise</span> <span class="c">Http404</span>(<span class="s">"page not found"</span>)</pre>
+    <div class="actions">
+      <a class="btn" href="/">Boş sahifaga qaytiş</a>
+    </div>
+    <p class="alt">Page not found · Страница не найдена</p>
+  </main>
 </body>
 </html>

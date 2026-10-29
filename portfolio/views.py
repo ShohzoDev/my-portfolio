@@ -126,12 +126,12 @@ def _projects(lang):
     return projects
 
 
-def _person(request, lang, name, strings, social_links, github_url, email):
+def _person(request, lang, profile, strings, social_links, github_url, email):
     """schema.org Person for search engines."""
     person = {
         "@context": "https://schema.org",
         "@type": "Person",
-        "name": name,
+        "name": profile.full_name,
         "jobTitle": strings["hero_role"],
         "description": strings["hero_tagline"],
         "url": request.build_absolute_uri(f"/{lang}/"),
@@ -141,6 +141,8 @@ def _person(request, lang, name, strings, social_links, github_url, email):
         "knowsAbout": STACK,
         "sameAs": [github_url] + [s.url for s in social_links if s.url != github_url],
     }
+    if profile.full_name_ru and profile.full_name_ru != profile.full_name:
+        person["alternateName"] = profile.full_name_ru
     if email:
         person["email"] = f"mailto:{email}"
     return person
@@ -159,7 +161,8 @@ def index(request, lang):
     telegram_url = next((s.url for s in social_links if s.platform == SocialLink.Platform.TELEGRAM), "")
     github_url = f"https://github.com/{settings.SITE_GITHUB_USERNAME}"
     email = _public_email()
-    page_title = f"{profile.full_name} — {strings['hero_role']}"
+    display_name = profile.name_for(lang)
+    page_title = f"{display_name} — {strings['hero_role']}"
 
     context = {
         "lang": lang,
@@ -178,6 +181,8 @@ def index(request, lang):
         "contact_email": email,
         "social_handle": settings.SITE_SOCIAL_HANDLE,
         "page_title": page_title,
+        "display_name": display_name,
+        "process": [{"n": f"0{i}", "title": strings[f"p{i}_t"], "desc": strings[f"p{i}_d"]} for i in range(1, 5)],
         "page_description": strings["hero_tagline"],
         "canonical_url": request.build_absolute_uri(f"/{lang}/"),
         "alternates": [
@@ -191,7 +196,7 @@ def index(request, lang):
         "og_locale_alternates": [OG_LOCALES[c] for c in SUPPORTED_LANGUAGES if c != lang],
         "asset_version": _asset_version(),
         "jsonld": _json_for_script(
-            _person(request, lang, profile.full_name, strings, social_links, github_url, email)
+            _person(request, lang, profile, strings, social_links, github_url, email)
         ),
     }
     return _remember_language(render(request, "portfolio/index.html", context), lang)

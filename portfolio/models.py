@@ -80,6 +80,12 @@ class Project(models.Model):
         default=Status.LIVE,
         help_text="«Ishlamoqda»dan boshqa holat nom yonida yozib qo'yiladi.",
     )
+    tech = models.CharField(
+        "Texnologiyalar",
+        max_length=120,
+        blank=True,
+        help_text="Vergul bilan, 3 tagacha: Django, PostgreSQL, PWA. Kartada yorliq bo'lib chiqadi.",
+    )
     is_founder = models.BooleanField("Men asoschiman", default=False, help_text="Nom yonida «Asoschi» belgisi chiqadi.")
     order = models.PositiveIntegerField("Tartib", default=0)
     is_active = models.BooleanField("Saytda ko'rsatilsin", default=True)
@@ -111,6 +117,7 @@ class Project(models.Model):
             "is_founder": self.is_founder,
             "link": self.link,
             "domain": self.domain,
+            "tech": [t.strip() for t in self.tech.split(",") if t.strip()][:3],
         }
 
 
@@ -124,6 +131,13 @@ class SiteProfile(models.Model):
         help_text="Saytda, sarlavhada va Google uchun ma'lumotlarda shu ism ishlatiladi.",
     )
 
+    full_name_ru = models.CharField(
+        "Ism (kirillda)",
+        max_length=120,
+        blank=True,
+        help_text="Rus sahifasida ko'rinadigan yozilishi, masalan «Шохзод». Bo'sh bo'lsa, asosiy ism ishlatiladi.",
+    )
+
     class Meta:
         verbose_name = "Sayt profili"
         verbose_name_plural = "Sayt profili"
@@ -134,6 +148,12 @@ class SiteProfile(models.Model):
     @classmethod
     def load(cls):
         return cls.objects.first() or cls(full_name="Shohzod")
+
+    def name_for(self, lang):
+        """The name as a reader of `lang` writes it (Cyrillic on the Russian page)."""
+        if lang == "ru" and self.full_name_ru.strip():
+            return self.full_name_ru.strip()
+        return self.full_name
 
 
 class LoginFailure(models.Model):

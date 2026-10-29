@@ -1,14 +1,51 @@
-/* Standalone 404/500 pages: no template context, no other CSS. Linked by a
-   plain path (not {% static %}) so a 500 page can never fail on a manifest lookup. */
+/* Standalone 404/500 pages: no template context. Linked by plain paths (not
+   {% static %}) so a 500 page can never fail on a manifest lookup. */
 :root { color-scheme: dark; }
+* { box-sizing: border-box; }
 body {
-  margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: #0d1117; color: #e6edf3;
-  font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
-  text-align: center; padding: 24px;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(600px circle at 50% 20%, rgba(76, 154, 255, 0.14), transparent 60%),
+    #0a0f1a;
+  color: #aab4c3;
+  font: 400 16px/1.6 "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-align: center;
 }
-.wrap { max-width: 440px; }
-.code { font-family: "SFMono-Regular", Consolas, monospace; color: #4c9aff; font-size: 1rem; letter-spacing: .08em; margin-bottom: 14px; }
-h1 { font-weight: 600; font-size: 1.8rem; letter-spacing: -0.02em; margin: 0 0 12px; }
-p { color: #8b949e; margin: 0 0 28px; line-height: 1.6; }
-a { display: inline-block; background: #4c9aff; color: #04111f; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px; }
+.wrap { max-width: 520px; }
+.logo { display: inline-block; }
+.logo img { border-radius: 11px; box-shadow: 0 8px 24px -10px rgba(76, 154, 255, 0.9); }
+.code { margin: 28px 0 0; color: #4c9aff; font: 500 14px/1.4 "IBM Plex Mono", ui-monospace, Consolas, monospace; letter-spacing: 0.1em; }
+h1 { margin: 12px 0 0; color: #e8eef6; font-size: clamp(2rem, 1.4rem + 2.6vw, 2.9rem); font-weight: 700; line-height: 1.1; letter-spacing: -0.03em; }
+.text { margin: 14px 0 0; font-size: 17px; }
+.snippet {
+  display: inline-block;
+  margin: 26px 0 0;
+  padding: 12px 18px;
+  border: 1px solid #2b3850;
+  border-radius: 12px;
+  background: #0d1422;
+  color: #c9d4e3;
+  font: 400 14px/1.5 "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+  text-align: left;
+}
+.k { color: #c792ea; } .c { color: #82aaff; } .s { color: #c3e88d; }
+.actions { margin-top: 30px; }
+.btn {
+  display: inline-block;
+  padding: 15px 26px;
+  border-radius: 12px;
+  background: #4c9aff;
+  color: #04111f;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 30px -12px rgba(76, 154, 255, 0.75);
+}
+.btn:hover { background: #6eaeff; }
+.alt { margin: 22px 0 0; color: #808b9b; font-size: 13.5px; }
